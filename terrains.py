@@ -1,0 +1,158 @@
+from os import path
+from sprites import *
+from setting import *
+
+"""
+This contains all the information for the different terrain in the game
+Nothing should change in there unless there's a way to change terrain in the game which I don't think there is
+
+When you implement a new terrain in the game you need to:
+    Make a new terrain class
+    make sure id_terrain() in Tile can identify it from the .txt file (give it a letter ex. m for mountain, make sure it's not already taken!!)
+    create a sprite class for it (you can copy paste the template of Plain) i'll implement the image for the unit
+"""
+
+
+# TODO create a master class for all terrain maybe?
+# and implement new terrain!
+
+
+# This is the master class Terrain which only serves to pass on the function get_mvt_cost()
+class Terrain:
+    def __init__(self):
+        self.terrain_type = None
+        self.infantry_mvt_cost = None
+        self.mech_mvt_cost = None
+        self.tires_mvt_cost = None
+        self.tread_mvt_cost = None
+        self.air_mvt_cost = None
+        self.ship_mvt_cost = None
+        self.transport_mvt_cost = None
+
+    # This function returns the mvt_cost for one of the 7 mvt_type on a given terrain
+    def get_mvt_cost(self, type):
+        if type == INFANTRY:
+            return self.infantry_mvt_cost
+        elif type == MECH:
+            return self.mech_mvt_cost
+        elif type == TIRES:
+            return self.tires_mvt_cost
+        elif type == TREAD:
+            return self.tread_mvt_cost
+        elif type == AIR:
+            return self.air_mvt_cost
+        elif type == SHIP:
+            return self.ship_mvt_cost
+        elif type == TRANSPORT:
+            return self.transport_mvt_cost
+        else:
+            print("get_mvt_cost was given the wrong input:")
+            print(type)
+
+
+class Plain(Terrain):
+    def __init__(self, game, x, y):
+        super().__init__()     # the super init doesn't really do anything for now
+        self.sprite = Plain_sprite(game, x, y)
+        self.name = "Plain"
+
+        self.defense = 1
+
+        # every terrain class must define the mvt cost for all movement types
+        # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
+        self.infantry_mvt_cost = 1
+        self.mech_mvt_cost = 1
+        self.tires_mvt_cost = 2
+        self.tread_mvt_cost = 1
+        self.air_mvt_cost = 1
+        self.ship_mvt_cost = 0
+        self.transport_mvt_cost = 0
+
+
+class River(Terrain):
+    def __init__(self, game, x, y):
+        super().__init__()     # the super init doesn't really do anything for now
+        self.sprite = River_sprite(game, x, y)
+        self.name = "River"
+        self.defense = 0
+
+        # every terrain class must define the mvt cost for all movement types
+        # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
+        self.infantry_mvt_cost = 2
+        self.mech_mvt_cost = 1
+        self.tires_mvt_cost = 0
+        self.tread_mvt_cost = 0
+        self.air_mvt_cost = 1
+        self.ship_mvt_cost = 0
+        self.transport_mvt_cost = 0
+
+
+class Wood(Terrain):
+    def __init__(self, game, x, y):
+        super().__init__()     # the super init doesn't really do anything for now
+        self.sprite = Wood_sprite(game, x, y)
+        self.name = "Wood"
+        self.defense = 2
+
+        # every terrain class must define the mvt cost for all movement types
+        # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
+        self.infantry_mvt_cost = 1
+        self.mech_mvt_cost = 1
+        self.tires_mvt_cost = 3
+        self.tread_mvt_cost = 2
+        self.air_mvt_cost = 1
+        self.ship_mvt_cost = 0
+        self.transport_mvt_cost = 0
+
+
+class Mountain(Terrain):
+    def __init__(self, game, x, y):
+        super().__init__()      # the super init doesn't really do anything for now
+        self.sprite = Mountain_sprite(game, x, y)
+        self.name = "Mountain"
+        self.defense = 4
+
+        # every terrain class must define the mvt cost for all movement types
+        # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
+        self.infantry_mvt_cost = 2
+        self.mech_mvt_cost = 1
+        self.tires_mvt_cost = 0
+        self.tread_mvt_cost = 0
+        self.air_mvt_cost = 1
+        self.ship_mvt_cost = 0
+        self.transport_mvt_cost = 0
+
+class Sea(Terrain):
+    def __init__(self, game, x, y):
+        super().__init__()       # the super init doesn't really do anything for now
+        self.sprite = Sea_sprite(game, x, y)
+        self.name = "Sea"
+        self.defense = 0
+
+        # every terrain class must define the mvt cost for all movement types
+        # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
+        self.infantry_mvt_cost = 0
+        self.mech_mvt_cost = 0
+        self.tires_mvt_cost = 0
+        self.tread_mvt_cost = 0
+        self.air_mvt_cost = 1
+        self.ship_mvt_cost = 1
+        self.transport_mvt_cost = 1
+
+
+class Road(Terrain):
+    def __init__(self, game, x, y):
+        super().__init__()     # the super init doesn't really do anything for now
+        self.sprite = Road_sprite(game, x, y)
+        self.name = "Road"
+        self.defense = 0
+
+        # every terrain class must define the mvt cost for all movement types
+        # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
+        self.infantry_mvt_cost = 1
+        self.mech_mvt_cost = 1
+        self.tires_mvt_cost = 1
+        self.tread_mvt_cost = 1
+        self.air_mvt_cost = 1
+        self.ship_mvt_cost = 0
+        self.transport_mvt_cost = 0
