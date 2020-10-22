@@ -1,59 +1,23 @@
 import pygame as pg
 from setting import *
-import math
+
+"""
+This contains all the Classes for the sprites
+This is mainly used to draw and not much else
+"""
 
 
-class Player(pg.sprite.Sprite):
+# ---------------------Terrains---------------------------
+
+class Plain_sprite(pg.sprite.Sprite):
     def __init__(self, game, x, y):
-        self.name = "player"
-        self.groups = game.all_sprites
-        pg.sprite.Sprite.__init__(self, self.groups)
-        self.game = game
-        self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image.fill(YELLOW)
-        self.rect = self.image.get_rect()
-        self.x = x
-        self.y = y
-        self.movement = 4
-
-    def move(self, dx=0, dy=0):
-        self.x += dx
-        self.y += dy
-
-    def move_click(self, dx, dy):
-        self.x = dx
-        self.y = dy
-
-    def update(self):
-        self.rect.x = self.x * TILESIZE
-        self.rect.y = self.y * TILESIZE
-
-
-class Wall(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.name = "wall"
-        self.groups = game.all_sprites, game.walls
-        pg.sprite.Sprite.__init__(self, self.groups)
-        self.game = game
-        self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image.fill(GREEN)
-        self.rect = self.image.get_rect()
-        self.x = x
-        self.y = y
-        self.rect.x = x * TILESIZE
-        self.rect.y = y * TILESIZE
-
-
-class Plain(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-
         self.name = "plain"
-        self.groups = game.background_sprites, game.plains
+        self.groups = game.terrain_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-
-        self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image.fill(GREEN)
+        self.image = self.game.plain_image
+        # self.image = pg.Surface((TILESIZE, TILESIZE))
+        # self.image.fill(GREEN)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
@@ -61,12 +25,59 @@ class Plain(pg.sprite.Sprite):
         self.rect.y = y * TILESIZE
 
 
-class River(pg.sprite.Sprite):
+class River_sprite(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.name = "river"
-        self.groups = game.background_sprites, game.rivers
+        self.groups = game.terrain_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
+        self.image = self.game.river_image
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+
+class Wood_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.name = "wood"
+        self.groups = game.terrain_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = self.game.wood_image
+        # self.image = pg.Surface((TILESIZE, TILESIZE))
+        # self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+
+class Mountain_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.name = "mountain"
+        self.groups = game.terrain_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = self.game.mountain_image
+        # self.image = pg.Surface((TILESIZE, TILESIZE))
+        # self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+
+class Sea_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.name = "sea"
+        self.groups = game.terrain_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        # self.image = self.game.mountain_image
         self.image = pg.Surface((TILESIZE, TILESIZE))
         self.image.fill(BLUE)
         self.rect = self.image.get_rect()
@@ -76,7 +87,26 @@ class River(pg.sprite.Sprite):
         self.rect.y = y * TILESIZE
 
 
-class Infantry(pg.sprite.Sprite):
+class Road_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.name = "mountain"
+        self.groups = game.terrain_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = self.game.road_image
+        # self.image = pg.Surface((TILESIZE, TILESIZE))
+        # self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+
+# ------------------------Units----------------------------
+
+
+class Infantry_sprite(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.name = "infantry"
         self.groups = game.unit_sprites
@@ -88,32 +118,44 @@ class Infantry(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
-        self.movement = 9
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
 
-    # def move(self, dx=0, dy=0):
-    #     self.x += dx
-    #     self.y += dy
+    # def update(self):
+    #     self.rect.x = self.x * TILESIZE
+    #     self.rect.y = self.y * TILESIZE
 
-    # def move_click(self, dx, dy):
-    #     self.game.map.__getitem__(self.x, self.y).new_unit(None)
-    #     self.x = dx
-    #     self.y = dy
-    #     self.game.map.__getitem__(self.x, self.y).new_unit("infantry")
 
-    def update(self):
-        self.rect.x = self.x * TILESIZE
-        self.rect.y = self.y * TILESIZE
+class Tank_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.name = "tank"
+        self.groups = game.unit_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = self.game.tank_image
+        # self.image = pg.Surface((TILESIZE, TILESIZE))
+        # self.image.fill(YELLOW)
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+    # def update(self):
+    #     self.rect.x = self.x * TILESIZE
+    #     self.rect.y = self.y * TILESIZE
+
+
+# ------------------------------Highlight--------------------------
 
 
 class Highlight(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.name = "highlight"
-        self.groups = game.foreground_sprites, game.highlight_list
+        self.groups = game.foreground_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = self.game.highlight_image
-        # self.image = pg.Surface((TILESIZE, TILESIZE))
-        # self.image.fill(LIGHTGREY)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
@@ -121,17 +163,23 @@ class Highlight(pg.sprite.Sprite):
         self.rect.y = y * TILESIZE
 
     def update(self):
-        self.game.map.__getitem__(self.x, self.y).new_foreground(None)
+        self.game.map.unhighlight_tile(self.x, self.y)
+        self.kill()
 
-# class Background(pg.sprite.Sprite):
-#     def __init__(self, game, x, y):
-#         self.groups = game.all_sprites, game.highlight
-#         pg.sprite.Sprite.__init__(self, self.groups)
-#         self.game = game
-#         self.image = pg.Surface((TILESIZE, TILESIZE))
-#         self.image.fill(DARKGREY)
-#         self.rect = self.image.get_rect()
-#         self.x = x
-#         self.y = y
-#         self.rect.x = x * TILESIZE
-#         self.rect.y = y * TILESIZE
+
+class Atk_highlight(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.name = "attack highlight"
+        self.groups = game.foreground_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = self.game.attack_highlight_image
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+    def update(self):
+        self.game.map.unhighlight_tile(self.x, self.y)
+        self.kill()
