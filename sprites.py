@@ -103,6 +103,22 @@ class Road_sprite(pg.sprite.Sprite):
         self.rect.y = y * TILESIZE
 
 
+class City_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.name = "mountain"
+        self.groups = game.terrain_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        # self.image = self.game.road_image
+        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+
 # ------------------------Units----------------------------
 
 
@@ -183,3 +199,18 @@ class Atk_highlight(pg.sprite.Sprite):
     def update(self):
         self.game.map.unhighlight_tile(self.x, self.y)
         self.kill()
+
+class Available(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.name = "available highlight"
+        self.groups = game.available_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = self.game.available_image
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+

@@ -19,7 +19,8 @@ When you implement a new terrain in the game you need to:
 
 # This is the master class Terrain which only serves to pass on the function get_mvt_cost()
 class Terrain:
-    def __init__(self):
+    def __init__(self, game):
+        self.game = game
         self.terrain_type = None
         self.infantry_mvt_cost = None
         self.mech_mvt_cost = None
@@ -52,7 +53,7 @@ class Terrain:
 
 class Plain(Terrain):
     def __init__(self, game, x, y):
-        super().__init__()     # the super init doesn't really do anything for now
+        super().__init__(game)     # the super init doesn't really do anything for now
         self.sprite = Plain_sprite(game, x, y)
         self.name = "Plain"
 
@@ -71,7 +72,7 @@ class Plain(Terrain):
 
 class River(Terrain):
     def __init__(self, game, x, y):
-        super().__init__()     # the super init doesn't really do anything for now
+        super().__init__(game)     # the super init doesn't really do anything for now
         self.sprite = River_sprite(game, x, y)
         self.name = "River"
         self.defense = 0
@@ -89,7 +90,7 @@ class River(Terrain):
 
 class Wood(Terrain):
     def __init__(self, game, x, y):
-        super().__init__()     # the super init doesn't really do anything for now
+        super().__init__(game)     # the super init doesn't really do anything for now
         self.sprite = Wood_sprite(game, x, y)
         self.name = "Wood"
         self.defense = 2
@@ -107,7 +108,7 @@ class Wood(Terrain):
 
 class Mountain(Terrain):
     def __init__(self, game, x, y):
-        super().__init__()      # the super init doesn't really do anything for now
+        super().__init__(game)      # the super init doesn't really do anything for now
         self.sprite = Mountain_sprite(game, x, y)
         self.name = "Mountain"
         self.defense = 4
@@ -124,7 +125,7 @@ class Mountain(Terrain):
 
 class Sea(Terrain):
     def __init__(self, game, x, y):
-        super().__init__()       # the super init doesn't really do anything for now
+        super().__init__(game)       # the super init doesn't really do anything for now
         self.sprite = Sea_sprite(game, x, y)
         self.name = "Sea"
         self.defense = 0
@@ -142,7 +143,7 @@ class Sea(Terrain):
 
 class Road(Terrain):
     def __init__(self, game, x, y):
-        super().__init__()     # the super init doesn't really do anything for now
+        super().__init__(game)     # the super init doesn't really do anything for now
         self.sprite = Road_sprite(game, x, y)
         self.name = "Road"
         self.defense = 0
@@ -156,3 +157,28 @@ class Road(Terrain):
         self.air_mvt_cost = 1
         self.ship_mvt_cost = 0
         self.transport_mvt_cost = 0
+
+
+class City(Terrain):
+    def __init__(self, game, x, y):
+        super().__init__(game)     # the super init doesn't really do anything for now
+        self.sprite = City_sprite(game, x, y)
+        self.name = "City"
+        self.defense = 3
+
+        # every terrain class must define the mvt cost for all movement types
+        # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
+        self.infantry_mvt_cost = 1
+        self.mech_mvt_cost = 1
+        self.tires_mvt_cost = 1
+        self.tread_mvt_cost = 1
+        self.air_mvt_cost = 1
+        self.ship_mvt_cost = 0
+        self.transport_mvt_cost = 0
+        self.owner = None
+
+    def add_funds(self):
+        if self.owner == PLAYER1:
+            self.game.player1[FUNDS] += 1000
+        elif self.owner == PLAYER2:
+            self.game.player2[FUNDS] += 1000

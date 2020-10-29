@@ -1,11 +1,5 @@
-# KidsCanCode - Game Development with Pygame video series
-# Tile-based game - Part 1
-# Project setup
-# Video link: https://youtu.be/3UxnelT9aCo
 import pygame as pg
 import sys
-import units
-import terrains
 from map import *
 from os import path
 import math
@@ -42,8 +36,10 @@ class Game:
 
         #This is where we create the buttons
         self.buttons_list = []
-        self.cancel_btn = Button(self.screen, LIGHTGREY, 1264, 640, 240, 128, "Cancel")
+        self.cancel_btn = Button(self.screen, WHITE, 1264, 640, 240, 128, "Cancel")
+        self.end_turn_btn = Button(self.screen, WHITE, 1024, 640, 240, 128, "End Turn")
         self.buttons_list.append(self.cancel_btn)
+        self.buttons_list.append(self.end_turn_btn)
 
         # Game folders References
         game_folder = path.dirname(__file__)
@@ -64,12 +60,14 @@ class Game:
         # Highlights
         self.highlight_image = pg.image.load(path.join(img_folder, 'highlight.png')).convert_alpha()
         self.attack_highlight_image = pg.image.load(path.join(img_folder, 'attack_highlight.png')).convert_alpha()
+        self.available_image = pg.image.load(path.join(img_folder, 'available.png')).convert_alpha()
 
 
         # Sprite list setup
         self.terrain_sprites = pg.sprite.Group()
         self.unit_sprites = pg.sprite.Group()
         self.foreground_sprites = pg.sprite.Group()
+        self.available_sprites = pg.sprite.Group()
 
         # In the last version, every sprite of the same kind was in a group of it's own.
         # This is unused for now but might come handy later on
@@ -78,12 +76,26 @@ class Game:
         # self.plains = pg.sprite.Group()
         # self.rivers = pg.sprite.Group()
 
+        # Initialize the players, first number is the player id, second is the CO
+        self.player1 = [NEUTRAL, STARTING_FUNDS]
+        self.player2 = [NEUTRAL, STARTING_FUNDS]
+        self.turn = PLAYER1 # turn start player2 but game setup calls end_turn() which ticks turn to player 1
+
+        # List of units for a player
+        self.player1_units = []
+        self.player2_units = []
+        self.player1_building = []
+        self.player2_building = []
+
         # creates the map and the reference
         self.map = Map(self)
 
     def run(self):
         # game loop, set self.playing = False to end the game
         self.playing = True
+        if self.turn == PLAYER1:
+            for unit in self.player1_units:
+                unit.new_turn()
 
         while self.playing:  # game loop
             self.dt = self.clock.tick(FPS) / 1000
@@ -114,6 +126,7 @@ class Game:
         self.terrain_sprites.draw(self.screen)
         self.unit_sprites.draw(self.screen)
         self.foreground_sprites.draw(self.screen)
+        self.available_sprites.draw(self.screen)
         self.draw_grid()
         for button in self.buttons_list:
             button.draw()
@@ -137,10 +150,13 @@ class Game:
                     x, y = pg.mouse.get_pos()
                     for button in self.buttons_list:  # checks if any button created are being hovered before clicking
                         if button.isOver(x, y):
-                            print("Cancel!")     # unused for now, used in move unit, this is just debugging
+                            if button == self.cancel_btn:
+                                print("Cancel!")  # unused for now, used in move unit, this is just debugging
+                            elif button == self.end_turn_btn:
+                                self.new_turn()
                 else:
-                    if self.map.is_unit(x, y):    # enters if there is a unit where the user clicked
-                        self.unit_selected(x, y)  # Function takes care of actions when selecting unit
+                    # if self.map.is_unit(x, y):    # enters if there is a unit where the user clicked
+                    self.tile_selected(x, y)  # Function takes care of actions when selecting unit
 
     def get_grid_coord(self):  # returns the position of the mouse in grid x and y rather than in pixels
         x, y = pg.mouse.get_pos()
@@ -148,15 +164,31 @@ class Game:
         y = math.floor(y / TILESIZE)  # almost everything works in map coordinate except the buttons
         return x, y
 
-    def unit_selected(self, x, y):  # Function takes care of actions when selecting unit, for now, only movement
+    def print_details(self, x, y):
+        if self.map.is_unit(x, y):
+            self.print_unit_details(x, y)
+        else:
+            self.unit_text.text.clear()
+        self.print_terrain_details(x, y)
+
+    def tile_selected(self, x, y):  # Function takes care of actions when selecting unit, for now, only movement
         # Display options after selecting unit
         # Assume user want to move unit for now
         # x, y are the current position while x2, y2 are the new position.
-        self.print_unit_details(x, y)
-        self.print_terrain_details(x, y)
-        moved, x2, y2 = self.move_unit(x, y)
-        if moved:    # if the unit moved, it can proceed to attack another unit in range
-            self.attack_options(x, y, x2, y2)  # This function takes care of all attacking shenanigans
+        self.print_details(x, y)
+        if self.map.is_unit(x, y):
+            unit = self.map.get_unit(x, y)
+            if unit.player == self.turn:
+                if not unit.moved:
+                    moved, x2, y2 = self.move_unit(x, y)
+                    if moved:    # if the unit moved, it can proceed to attack another unit in range
+                        attacked = self.attack_options(x, y, x2, y2)  # This function takes care of all attacking shenanigans
+                    if unit.moved:
+                        unit.unit_moved()
+                else:
+                    print("unit already moved")
+            else:
+                print("not your unit")
 
     def move_unit(self, x, y):
         # This function takes care of everything related to moving a unit.
@@ -179,6 +211,9 @@ class Game:
                     self.map.move_unit(x, y, x2, y2)  # moves the unit, Map takes care of it
                     self.draw()
                     moved = True
+                elif self.map.is_unit(x2, y2) and self.map.is_highlight(x2, y2):
+                    self.merge_unit(x, y, x2, y2)
+                self.print_details(x2, y2)
                 position_selected = True  # otherwise nothing and it removes the highlights in the update
         return moved, x2, y2
 
@@ -249,11 +284,15 @@ class Game:
                     if self.cancel_btn.isOver(x2, y2):
                         target_selected = True
                         self.map.move_unit(x, y, old_x, old_y)  # Moves unit back if the user cancels
-                elif self.map.is_atk_highlight(x2, y2) and self.map.is_unit(x2, y2):
+                elif self.map.is_atk_highlight(x2, y2) and self.map.is_unit(x2, y2) and self.map.get_unit(x2, y2).player != self.turn:
                     # enters if the tile has an atk_highlight and has a unit
                     self.atk_target(x, y, x2, y2)
                     attacked = True
+                    self.print_details(x2, y2)
+                else:
+                    self.print_details(x2, y2)
                 target_selected = True  # otherwise nothing and it removes the highlights in the update
+        self.direct_atk_unhighlight(x, y)  # Highlights tiles that can be attacked
         return attacked
 
     def direct_atk_highlight(self, x, y):
@@ -263,6 +302,14 @@ class Game:
         self.map.atk_highlight_tile(x - 1, y)   #left
         self.map.atk_highlight_tile(x + 1, y)   #right
         self.map.atk_highlight_tile(x, y + 1)   #down
+
+    def direct_atk_unhighlight(self, x, y):
+        # unhighlight tile that can be attacked
+        # only direct attacks are implemented, so all unit can attack other unit directly adjacent to themn
+        self.map.atk_unhighlight_tile(x, y - 1)   #up
+        self.map.atk_unhighlight_tile(x - 1, y)   #left
+        self.map.atk_unhighlight_tile(x + 1, y)   #right
+        self.map.atk_unhighlight_tile(x, y + 1)   #down
 
     def atk_target(self, x, y, x2, y2):
         # this function takes care of damage calculation and updating the corresponding hp
@@ -276,6 +323,36 @@ class Game:
         defender.hp -= damage_dealt
         if defender.hp < 1:
             self.map.remove_unit(x2, y2)
+
+    def merge_unit(self, x, y, x2, y2):
+        unit1 = self.map.get_unit(x, y)
+        unit2 = self.map.get_unit(x2, y2)
+        if self.turn == unit1.player and unit1.name == unit2.name and unit2.hp != FULL_HP:
+            unit1_hp = unit1.hp
+            self.map.remove_unit(x, y)
+            unit2.hp += unit1_hp
+            if unit2.hp > FULL_HP:
+                excess = unit2.hp -10
+                # TODO add fund depending on excess hp
+                unit2.hp = FULL_HP
+
+    def new_turn(self):
+        if self.turn == PLAYER1:
+            for unit in self.player1_units:
+                unit.end_turn()
+            for unit in self.player2_units:
+                unit.new_turn()
+            for city in self.player2_building:
+                city.add_funds()
+        elif self.turn == PLAYER2:
+            for unit in self.player2_units:
+                unit.end_turn()
+            for unit in self.player1_units:
+                unit.new_turn()
+            for city in self.player1_building:
+                city.add_funds()
+        self.turn = (self.turn + 1) % NB_PLAYER
+        print(self.player1[FUNDS])
 
     def print_unit_details(self, x, y):
         # pretty much just takes info from the unit class and appends them to the textbox text list to print
@@ -291,6 +368,8 @@ class Game:
         text = "Mvt: " + str(self.map.get_mvt(x, y))
         self.unit_text.text.append(text)
         text = "HP: " + str(self.map.get_unit(x, y).hp)
+        self.unit_text.text.append(text)
+        text = "Player: " + str(self.map.get_unit(x, y).player)
         self.unit_text.text.append(text)
 
     def print_terrain_details(self, x, y):
@@ -340,7 +419,7 @@ class Button:
         self.height = height
         self.text = text
 
-    def draw(self, outline=None):
+    def draw(self, outline=True):
         # draws button and text on screen
         if outline:
             pg.draw.rect(self.screen, outline, (self.x-2,self.y-2,self.width+4,self.height+4),0)

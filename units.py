@@ -15,22 +15,80 @@ When you implement a new unit to the game you need to:
 #TODO create a master class for all unit maybe?
 # and implement new unit!
 
-class Infantry:
-    def __init__(self, game, x, y):
+
+class Unit:
+    def __init__(self):
+        self.x = None
+        self.y = None
+        self.game = None
+        self.player = None
+        self.name = None
+        self.fuel = None
+        self.damage = None
+        self.movement = None
+        self.hp = None
+        self.mvt_type = None
+        self.sprite = None
+        self.moved = None
+        self.available = None
+
+    def end_turn(self):
+        if not self.moved:
+            self.unit_moved()
+        else:
+            self.moved = False
+
+    def new_turn(self):
+        self.available = Available(self.game, self.x, self.y)
+
+    def unit_moved(self):
+        if self.available:
+            self.available.kill()
+            self.available = None
+
+    def die(self):
+        self.sprite.kill()
+        if self.available:
+            self.available.kill()
+
+    def move(self, x, y):
+        self.x = x
+        self.y = y
+        self.sprite.rect.x = x * TILESIZE
+        self.sprite.rect.y = y * TILESIZE
+
+class Infantry(Unit):
+    def __init__(self, player, game, x, y):
+        super().__init__()  # the super init doesn't really do anything for now
+        self.x = x
+        self.y = y
+        self.game = game
+        self.player = player
         self.name = "Infantry"
         self.fuel = 99
         self.damage = 3
         self.movement = 3
         self.hp = 10
-        self.mvt_type = INFANTRY      #All unit need a movement type, check settings for all movement types
+        self.mvt_type = INFANTRY      # All unit need a movement type, check settings for all movement types
         self.sprite = Infantry_sprite(game, x, y)
+        self.moved = False
+        self.available = None
 
-class Tank:
-    def __init__(self, game, x, y):
+
+class Tank(Unit):
+    def __init__(self, player, game, x, y):
+        super().__init__()  # the super init doesn't really do anything for now
+        self.x = x
+        self.y = y
+        self.game = game
+        self.player = player
         self.name = "Tank"
-        self.fuel = 99
+        self.fuel = 70
         self.damage = 5
         self.movement = 6
         self.hp = 10
-        self.mvt_type = TREAD        #All unit need a movement type, check settings for all movement types
+        self.mvt_type = TREAD        # All unit need a movement type, check settings for all movement types
         self.sprite = Tank_sprite(game, x, y)
+        self.moved = False
+        self.available = None
+
