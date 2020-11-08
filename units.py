@@ -30,6 +30,7 @@ class Unit:
         self.mvt_type = None
         self.sprite = None
         self.available = None
+        self.can_attack = None
 
     def end_turn(self):
         if self.available:
@@ -53,6 +54,29 @@ class Unit:
             self.available.rect.x = x * TILESIZE
             self.available.rect.y = y * TILESIZE
 
+    def highlight(self):
+        self.available.kill()
+        self.available = Select(self.game, self.x, self.y)
+
+    def unhighlight(self):
+        self.available.kill()
+        self.available = Available(self.game, self.x, self.y)
+
+    def embark(self):
+        self.sprite.kill()
+        if self.available:
+            self.available.kill()
+
+    def drop(self, x, y):
+        print("im dropping in")
+        print(x, y)
+        if self.name == "Infantry":
+            self.sprite = Infantry_sprite(self.game, self.x, self.y, self.player.ID)
+        elif self.name == "Tank":
+            self.sprite = Tank_sprite(self.game, self.x, self.y, self.player.ID)
+        elif self.name == "APC":
+            self.sprite = APC_sprite(self.game, self.x, self.y, self.player.ID)
+        self.move(x, y)
 
 class Infantry(Unit):
     def __init__(self, player, game, x, y):
@@ -69,6 +93,7 @@ class Infantry(Unit):
         self.mvt_type = INFANTRY      # All unit need a movement type, check settings for all movement types
         self.sprite = Infantry_sprite(game, x, y, self.player.ID)
         self.available = None
+        self.can_attack = True
 
 
 class Tank(Unit):
@@ -86,4 +111,23 @@ class Tank(Unit):
         self.mvt_type = TREAD        # All unit need a movement type, check settings for all movement types
         self.sprite = Tank_sprite(game, x, y, self.player.ID)
         self.available = None
+        self.can_attack = True
+
+class APC(Unit):
+    def __init__(self, player, game, x, y):
+        super().__init__()  # the super init doesn't really do anything for now
+        self.x = x
+        self.y = y
+        self.game = game
+        self.player = player
+        self.name = "APC"
+        self.fuel = 99
+        self.damage = 5
+        self.movement = 6
+        self.hp = 10
+        self.mvt_type = TREAD        # All unit need a movement type, check settings for all movement types
+        self.sprite = APC_sprite(game, x, y, self.player.ID)
+        self.available = None
+        self.can_attack = False
+        self.holding = None
 

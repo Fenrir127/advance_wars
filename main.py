@@ -55,6 +55,8 @@ class Game:
         self.infantry_blue_image = pg.image.load(path.join(img_folder, 'infantry_blue.png')).convert_alpha()
         self.tank_red_image = pg.image.load(path.join(img_folder, 'tank_red.png')).convert_alpha()
         self.tank_blue_image = pg.image.load(path.join(img_folder, 'tank_blue.png')).convert_alpha()
+        self.apc_red_image = pg.image.load(path.join(img_folder, 'apc_red.png')).convert_alpha()
+        self.apc_blue_image = pg.image.load(path.join(img_folder, 'apc_blue.png')).convert_alpha()
 
         # Terrain
         self.plain_image = pg.image.load(path.join(img_folder, 'plain.png')).convert_alpha()
@@ -185,11 +187,14 @@ class Game:
             unit = self.map.get_unit(x, y)
             if unit.player.ID == self.turn:
                 if unit.available:
-                    moved, x2, y2 = self.move_unit(x, y)
-                    if moved:  # if the unit moved, it can proceed to attack another unit in range
-                        self.options(x, y, x2, y2)  # This function takes care of all attacking shenanigans
-                    if not unit.available:
+                    unit.highlight()
+                    acted, show_options, x2, y2 = self.move_unit(x, y)
+                    if show_options:  # if the unit moved, it can proceed to attack another unit in range
+                        acted = self.options(x, y, x2, y2)  # This function takes care of all attacking shenanigans
+                    if acted:
                         unit.end_turn()
+                    else:
+                        unit.unhighlight()
                     self.erase_highlights()
             else:
                 self.highlight_enemy(self.map.get_unit_mvt_type(x, y), self.map.get_mvt(x, y), x, y)
@@ -202,36 +207,65 @@ class Game:
         self.end_turn_btn.text = "End Mvt"
         self.cancel_btn.text = "Cancel"
         self.draw()  # draws the highlight
+        position_confirmed = False
         position_selected = False
+        show_options = False
         moved = False
-        while not position_selected:  # loops until the user clicks a tile
+        while not position_confirmed:  # loops until the user clicks a tile
             event = pg.event.wait()
             if event.type == pg.MOUSEBUTTONDOWN:  # enters when the user clicks on tile
                 x2, y2 = self.get_grid_coord()  # Coordinate of the new tile clicked
                 if x2 > 31:  # if x > 31, the user clicked the buttons of a textbox
                     x2, y2 = pg.mouse.get_pos()  # gets the position again but this time in pixel.
                     if self.cancel_btn.isOver(x2, y2):  # Cancel the move order, currently doesn't really od anything but might change later on
-                        position_selected = True
-                    elif self.end_turn_btn.isOver(x2, y2):
+                        show_options = False
                         moved = False
-                        position_selected = True
-                        self.map.get_unit(x, y).end_turn()
+                        position_confirmed = True
+                    elif self.end_turn_btn.isOver(x2, y2):
+                        show_options = False
+                        moved = True
+                        position_confirmed = True
+                    elif self.special_btn.isOver(x2, y2) and position_selected and self.special_btn.text == "Merge":
+                        show_options = False
+                        moved = True
+                        position_confirmed = True
+                        self.merge_unit(x, y, position_selected[0], position_selected[1])
+                    elif self.special_btn.isOver(x2, y2) and position_selected and self.special_btn.text == "Embark":
+                        show_options = False
+                        moved = True
+                        position_confirmed = True
+                        self.embark_unit(x, y, position_selected[0], position_selected[1])
                 elif self.map.is_highlight(x2, y2) and not self.map.is_unit(x2, y2):
                     # if the tile has a highlight and no unit on it, it is valid and the unit moves
                     self.map.move_unit(x, y, x2, y2)  # moves the unit, Map takes care of it
+                    position_selected = False
+                    self.special_btn.text = ""
+                    self.preview_text.text.clear()
                     self.draw()
                     moved = True
-                    position_selected = True
+                    show_options = True
+                    position_confirmed = True
                     self.print_details(x2, y2)
                 elif self.map.is_unit(x2, y2) and self.map.is_highlight(x2, y2):  # Merge 2 units
+                    unit1 = self.map.get_unit(x, y)
+                    unit2 = self.map.get_unit(x2, y2)
                     if x == x2 and y == y2:
-                        moved = True
-                        position_selected = True
-                    else:
-                        self.merge_unit(x, y, x2, y2)
+                        moved = False
+                        show_options = True
+                        position_confirmed = True
+                    elif self.turn == unit2.player.ID and unit1.name == unit2.name and unit2.hp != FULL_HP:
+                        position_selected = (x2, y2)
+                        self.special_btn.text = "Merge"
+                        self.print_merge_preview(x, y, x2, y2)
                         self.print_details(x2, y2)
+                        self.draw()
+                    elif self.turn == unit2.player.ID and unit2.name == "APC" and not unit2.holding and (unit1.name == "Infantry" or unit1.name == "Mech"):
+                        position_selected = (x2, y2)
+                        self.special_btn.text = "Embark"
+                        self.print_details(x2, y2)
+                        self.draw()
         self.erase_highlights()
-        return moved, x2, y2
+        return moved, show_options, x2, y2
 
     def highlight(self, mvt_type, mvt, x, y, direction="None"):
         # This function takes care of highlighting tiles of available movement for a unit
@@ -343,18 +377,38 @@ class Game:
                 else:
                     self.direct_atk_highlight(x, y)
 
+    def highlight_drop(self, x, y):
+        unit = self.map.get_unit(x, y)
+        drop = unit.holding
+        mvt_type = drop.mvt_type
+        if y - 1 >= 0:
+            if self.map.get_tile_mvt_cost(mvt_type, x, y - 1) != 0:
+                self.map.atk_highlight_tile(x, y - 1)  # up
+        if x - 1 >= 0:
+            if self.map.get_tile_mvt_cost(mvt_type, x - 1, y) != 0:
+                self.map.atk_highlight_tile(x - 1, y)  # left
+        if x + 1 <= 31:
+            if self.map.get_tile_mvt_cost(mvt_type, x + 1, y) != 0:
+                self.map.atk_highlight_tile(x + 1, y)  # right
+        if y + 1 <= 23:
+            if self.map.get_tile_mvt_cost(mvt_type, x, y + 1) != 0:
+                self.map.atk_highlight_tile(x, y + 1)  # down
+
     def options(self, old_x, old_y, x, y):
         # This function takes care of handling everything related to attacking.
         # It highlights the tiles that can be attacked and attack the corresponding
         # It essentially has the same structure as move_unit() with some different function in the ifs and whiles
         # it can be cancelled by clicking the cancel button, as of the call of this function, the unit has moved to a different location from it's original.
         # If we want to cancel everything, we need to move it back to it's original spot and we need the old x and y for that
-        self.direct_atk_enemy_highlight(x, y)  # Highlights tiles that can be attacked
+        if self.map.get_unit(x, y).can_attack:
+            self.direct_atk_enemy_highlight(x, y)  # Highlights tiles that can be attacked
+        if self.map.get_unit(x, y).name == "APC":
+            if self.map.get_unit(x, y).holding:
+                self.special_btn.text = "Drop"
         self.draw()
-
+        acted = False
         target_confirmed = False
         target_selected = False
-        attacked = False
         while not target_confirmed:  # loops until the user clicks a tile
             event = pg.event.wait()
             if event.type == pg.MOUSEBUTTONDOWN:  # enters when the user clicks on tile
@@ -364,35 +418,50 @@ class Game:
                     if self.cancel_btn.isOver(x2, y2):
                         target_confirmed = True
                         self.map.move_unit(x, y, old_x, old_y)  # Moves unit back if the user cancels
+                        acted = False
                     elif self.end_turn_btn.isOver(x2, y2):
                         target_confirmed = True
-                    elif self.attack_btn.isOver(x2, y2) and target_selected:
+                        acted = True
+                    elif self.attack_btn.isOver(x2, y2) and target_selected and self.attack_btn.text == "Confirm Atk":
                         self.atk_target(x, y, target_selected[0], target_selected[1])
                         target_confirmed = True
                         self.draw()
-                    elif self.special_btn.isOver(x2, y2) and target_selected:
+                        acted = True
+                    elif self.special_btn.isOver(x2, y2) and target_selected and self.special_btn.text == "Capture":
                         self.capture_building(x, y)
                         target_confirmed = True
+                        acted = True
+                    elif self.special_btn.isOver(x2, y2) and self.special_btn.text == "Drop":
+                        self.special_btn.text = "Confirm Drop"
+                        self.highlight_drop(x, y)
+                        self.draw()
+                    elif self.special_btn.isOver(x2, y2) and target_selected and self.special_btn.text == "Confirm Drop":
+                        self.special_btn.text = ""
+                        self.drop_unit(x, y, target_selected[0], target_selected[1])
+                        target_confirmed = True
+                        acted = True
+
+
                 elif self.map.is_atk_highlight(x2, y2):
                     self.print_details(x2, y2)
-                    self.print_atk_preview(x, y, x2, y2)
-                    self.attack_btn.text = "Confirm Atk"
+                    if self.map.get_unit(x, y).can_attack:
+                        self.print_atk_preview(x, y, x2, y2)
+                        self.attack_btn.text = "Confirm Atk"
                     target_selected = (x2, y2)
                     self.draw()
-                    # attacked = self.atk_target(x, y, x2, y2)
-                    # if attacked:
-                    #     target_confirmed = True
-                elif self.map.get_terrain(x2, y2).type == BUILDING and x2 == x and y2 == y:
+                elif self.map.get_terrain(x2, y2).type == BUILDING and x2 == x and y2 == y and (self.map.get_unit(x, y).name == "Infantry" or self.map.get_unit(x, y).name == "Mech"):
                     if self.map.get_terrain(x2, y2).owner != self.turn:
                         self.special_btn.text = "Capture"
-                        target_selected = True
                         self.draw()
                         target_selected = True
                 else:
+                    target_selected = False
+                    self.special_btn.text = ""
+                    self.attack_btn.text = ""
+                    self.preview_text.text.clear()
                     self.print_details(x2, y2)
                     self.draw()
-                # target_confirmed = True  # otherwise nothing and it removes the highlights in the update
-        return attacked
+        return acted
 
     def direct_atk_highlight(self, x, y):
         # highlight tile that can be attacked
@@ -436,6 +505,7 @@ class Game:
             terrain.hp = 10
             terrain.owner = unit.player
 
+
     def atk_target(self, x, y, x2, y2):
         # this function takes care of damage calculation and updating the corresponding hp
         # Real damage calculation not implemented
@@ -455,16 +525,31 @@ class Game:
     def merge_unit(self, x, y, x2, y2):
         unit1 = self.map.get_unit(x, y)
         unit2 = self.map.get_unit(x2, y2)
-        if self.turn == unit1.player and unit1.name == unit2.name and unit2.hp != FULL_HP:
-            unit1_hp = unit1.hp
-            self.map.remove_unit(x, y)
-            unit2.hp += unit1_hp
-            if unit2.hp > FULL_HP:
-                excess = unit2.hp - FULL_HP
-                # TODO add fund depending on excess hp
-                unit2.hp = FULL_HP
+        unit1_hp = unit1.hp
+        self.map.remove_unit(x, y)
+        unit2.hp += unit1_hp
+        unit2.end_turn()
+        if unit2.hp > FULL_HP:
+            excess = unit2.hp - FULL_HP
+            # TODO add fund depending on excess hp
+            unit2.hp = FULL_HP
+
+    def embark_unit(self, x, y, x2, y2):
+        unit1 = self.map.get_unit(x, y)
+        unit2 = self.map.get_unit(x2, y2)
+        unit2.holding = unit1
+        self.map.embark_unit(x, y)
+
+    def drop_unit(self, x, y, x2, y2):
+        dropper = self.map.get_unit(x, y)
+        unit = dropper.holding
+        self.map.drop_unit(x2, y2, unit)
+        dropper.holding = None
+
 
     def new_turn(self):
+        self.erase_highlights()
+        self.preview_text.text.clear()
         for player in self.players:
             if self.turn == player.ID:
                 for unit in player.units:
@@ -555,6 +640,22 @@ class Game:
         if damage < 0:
             damage = 0
         text = "Damage you will deal " + str(damage)
+        self.preview_text.text.append(text)
+
+    def print_merge_preview(self, x, y, x2, y2):
+        unit1 = self.map.get_unit(x, y)
+        unit2 = self.map.get_unit(x2, y2)
+        self.preview_text.text.clear()
+        text = "You will merge unit at " + str(x) + ", " + str(y) + " with unit " + str(x2) + ", " + str(y2)
+        self.preview_text.text.append(text)
+
+        hp = unit2.hp + unit1.hp
+        excess = 0
+        if hp > FULL_HP:
+            excess = hp - FULL_HP
+            # TODO add fund depending on excess hp
+            hp = FULL_HP
+        text = "Merged unit will have " + str(hp) + "hp with " + str(excess) + " excess"
         self.preview_text.text.append(text)
 
 

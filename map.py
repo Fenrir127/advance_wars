@@ -98,27 +98,20 @@ class Map:
 
     def move_unit(self, x1, y1, x2, y2):  # moves a unit to another tile
         unit = self.get_unit(x1, y1)
-        if unit.available:
-            unit.end_turn()
-        else:
-            unit.new_turn()
+
         unit.move(x2, y2)
         self.get_tile(x1, y1).unit = None
         self.get_tile(x2, y2).unit = unit
 
-        # this is what happens when a unit moves onto a building tile
+    def embark_unit(self, x, y):
+        tile = self.get_tile(x, y)
+        tile.unit.embark()
+        tile.unit = None
 
-        if self.get_tile(x2, y2).terrain.type:  # enters if the tile is a building
-            terrain = self.get_tile(x2, y2).terrain
-            if terrain.owner != unit.player:
-                terrain.hp -= unit.hp
-                if terrain.hp < 1:
-                    if terrain.owner is not None:
-                        previous_owner = terrain.owner
-                        previous_owner.buildings.remove(terrain)
-                    terrain.owner = unit.player
-                    unit.player.buildings.append(terrain)
-                    terrain.hp = 20
+    def drop_unit(self, x, y, unit):
+        tile = self.get_tile(x, y)
+        unit.drop(x, y)
+        tile.unit = unit
 
     def remove_unit(self, x, y):  # Removes a unit from the game (because it's dead)
         tile = self.get_tile(x, y)
@@ -154,6 +147,9 @@ class Tile:
             player.units.append(self.unit)
         elif type == 't':
             self.unit = Tank(player, self.game, self.x, self.y)
+            player.units.append(self.unit)
+        elif type == 'a':
+            self.unit = APC(player, self.game, self.x, self.y)
             player.units.append(self.unit)
         elif type == '.':
             return None

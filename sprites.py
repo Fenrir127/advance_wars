@@ -132,17 +132,12 @@ class Infantry_sprite(pg.sprite.Sprite):
             self.image = self.game.infantry_red_image
         elif color == Blue:
             self.image = self.game.infantry_blue_image
-        # self.image = pg.Surface((TILESIZE, TILESIZE))
-        # self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
 
-    # def update(self):
-    #     self.rect.x = self.x * TILESIZE
-    #     self.rect.y = self.y * TILESIZE
 
 
 class Tank_sprite(pg.sprite.Sprite):
@@ -155,17 +150,27 @@ class Tank_sprite(pg.sprite.Sprite):
             self.image = self.game.tank_red_image
         elif color == Blue:
             self.image = self.game.tank_blue_image
-        # self.image = pg.Surface((TILESIZE, TILESIZE))
-        # self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
 
-    # def update(self):
-    #     self.rect.x = self.x * TILESIZE
-    #     self.rect.y = self.y * TILESIZE
+class APC_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y, color):
+        self.name = "APC"
+        self.groups = game.unit_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        if color == Red:
+            self.image = self.game.apc_red_image
+        elif color == Blue:
+            self.image = self.game.apc_blue_image
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
 
 
 # ------------------------------Highlight--------------------------
