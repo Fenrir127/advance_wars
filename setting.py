@@ -57,3 +57,11 @@ STURM = 11
 # Game General
 FULL_HP = 10
 STARTING_FUNDS = 10000
+
+# Terrain types
+LAND = 0
+WATER = 0
+BUILDING = 1
+
+Red = 0
+Blue = 1

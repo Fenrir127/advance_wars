@@ -29,22 +29,15 @@ class Unit:
         self.hp = None
         self.mvt_type = None
         self.sprite = None
-        self.moved = None
         self.available = None
 
     def end_turn(self):
-        if not self.moved:
-            self.unit_moved()
-        else:
-            self.moved = False
-
-    def new_turn(self):
-        self.available = Available(self.game, self.x, self.y)
-
-    def unit_moved(self):
         if self.available:
             self.available.kill()
             self.available = None
+
+    def new_turn(self):
+        self.available = Available(self.game, self.x, self.y)
 
     def die(self):
         self.sprite.kill()
@@ -56,6 +49,10 @@ class Unit:
         self.y = y
         self.sprite.rect.x = x * TILESIZE
         self.sprite.rect.y = y * TILESIZE
+        if self.available:
+            self.available.rect.x = x * TILESIZE
+            self.available.rect.y = y * TILESIZE
+
 
 class Infantry(Unit):
     def __init__(self, player, game, x, y):
@@ -70,8 +67,7 @@ class Infantry(Unit):
         self.movement = 3
         self.hp = 10
         self.mvt_type = INFANTRY      # All unit need a movement type, check settings for all movement types
-        self.sprite = Infantry_sprite(game, x, y)
-        self.moved = False
+        self.sprite = Infantry_sprite(game, x, y, self.player.ID)
         self.available = None
 
 
@@ -88,7 +84,6 @@ class Tank(Unit):
         self.movement = 6
         self.hp = 10
         self.mvt_type = TREAD        # All unit need a movement type, check settings for all movement types
-        self.sprite = Tank_sprite(game, x, y)
-        self.moved = False
+        self.sprite = Tank_sprite(game, x, y, self.player.ID)
         self.available = None
 

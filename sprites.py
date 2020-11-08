@@ -123,12 +123,15 @@ class City_sprite(pg.sprite.Sprite):
 
 
 class Infantry_sprite(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
+    def __init__(self, game, x, y, color):
         self.name = "infantry"
         self.groups = game.unit_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = self.game.infantry_image
+        if color == Red:
+            self.image = self.game.infantry_red_image
+        elif color == Blue:
+            self.image = self.game.infantry_blue_image
         # self.image = pg.Surface((TILESIZE, TILESIZE))
         # self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
@@ -143,12 +146,15 @@ class Infantry_sprite(pg.sprite.Sprite):
 
 
 class Tank_sprite(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
+    def __init__(self, game, x, y, color):
         self.name = "tank"
         self.groups = game.unit_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = self.game.tank_image
+        if color == Red:
+            self.image = self.game.tank_red_image
+        elif color == Blue:
+            self.image = self.game.tank_blue_image
         # self.image = pg.Surface((TILESIZE, TILESIZE))
         # self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
@@ -197,7 +203,7 @@ class Atk_highlight(pg.sprite.Sprite):
         self.rect.y = y * TILESIZE
 
     def update(self):
-        self.game.map.unhighlight_tile(self.x, self.y)
+        self.game.map.atk_unhighlight_tile(self.x, self.y)
         self.kill()
 
 class Available(pg.sprite.Sprite):
@@ -207,6 +213,19 @@ class Available(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = self.game.available_image
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+class Select(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.name = "select"
+        self.groups = game.available_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = self.game.select_image
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y

@@ -38,10 +38,10 @@ class Map:
                 self.map[y][x] = Tile(self.game, map_terrain[y][x], x, y)  # , map_unit[y][x],
         for x in range(0, 32):
             for y in range(0, 24):
-                self.get_tile(x, y).add_unit(PLAYER1, map_player1_unit[y][x])
+                self.get_tile(x, y).add_unit(self.game.player1, map_player1_unit[y][x])
         for x in range(0, 32):
             for y in range(0, 24):
-                self.get_tile(x, y).add_unit(PLAYER2, map_player2_unit[y][x])
+                self.get_tile(x, y).add_unit(self.game.player2, map_player2_unit[y][x])
 
     def get_tile(self, x, y):  # returns reference to a tile on the map
         return self.map[y][x]
@@ -49,7 +49,7 @@ class Map:
     def get_mvt(self, x, y):  # returns unit movement for a unit on a tile
         return self.get_tile(x, y).unit.movement
 
-    def get_unit_mvt_type(self, x, y):  #returns the type of mvt for a unit on a tile
+    def get_unit_mvt_type(self, x, y):  # returns the type of mvt for a unit on a tile
         return self.get_tile(x, y).unit.mvt_type
 
     def get_terrain(self, x, y):  # returns reference to a terrain for a tile
@@ -58,10 +58,10 @@ class Map:
     def get_unit(self, x, y):  # returns reference to a unit on a tile
         return self.get_tile(x, y).unit
 
-    def get_unit_name(self, x, y): #returns unit name
+    def get_unit_name(self, x, y):  # returns unit name
         return self.get_tile(x, y).unit.name
 
-    def get_terrain_name(self, x, y): #returns terrain name
+    def get_terrain_name(self, x, y):  # returns terrain name
         return self.get_tile(x, y).terrain.name
 
     def get_defense(self, x, y):
@@ -70,19 +70,21 @@ class Map:
     def get_tile_mvt_cost(self, mvt_type, x, y):  # returns mvt cost for a terrain for a given mvt_type on a given tile
         return self.get_tile(x, y).terrain.get_mvt_cost(mvt_type)
 
-    def is_highlight(self, x, y):  # returns if a tile is highlighted
+    def is_highlight(self, x, y):
         return self.get_tile(x, y).highlighted
 
-    def is_atk_highlight(self, x, y):  # returns if a tile is highlighted
+    def is_atk_highlight(self, x, y):
         return self.get_tile(x, y).atk_highlighted
 
     def highlight_tile(self, x, y):  # highlights a tile
-        self.get_tile(x, y).highlighted = True
-        Highlight(self.game, x, y)
+        if not self.get_tile(x, y).highlighted:
+            self.get_tile(x, y).highlighted = True
+            Highlight(self.game, x, y)
 
     def atk_highlight_tile(self, x, y):
-        self.get_tile(x, y).atk_highlighted = True
-        Atk_highlight(self.game, x, y)
+        if not self.get_tile(x, y).atk_highlighted:
+            self.get_tile(x, y).atk_highlighted = True
+            Atk_highlight(self.game, x, y)
 
     def atk_unhighlight_tile(self, x, y):
         self.get_tile(x, y).atk_highlighted = False
@@ -96,17 +98,27 @@ class Map:
 
     def move_unit(self, x1, y1, x2, y2):  # moves a unit to another tile
         unit = self.get_unit(x1, y1)
-        unit.moved = not unit.moved
+        if unit.available:
+            unit.end_turn()
+        else:
+            unit.new_turn()
         unit.move(x2, y2)
         self.get_tile(x1, y1).unit = None
         self.get_tile(x2, y2).unit = unit
-        if self.get_tile(x2, y2).terrain.name == "City":
-            self.get_tile(x2, y2).terrain.owner = unit.player
-            if unit.player == PLAYER1:
-                self.game.player1_building.append(self.get_tile(x2, y2).terrain)
-            elif unit.player == PLAYER2:
-                self.game.player2_building.append(self.get_tile(x2, y2).terrain)
 
+        # this is what happens when a unit moves onto a building tile
+
+        if self.get_tile(x2, y2).terrain.type:  # enters if the tile is a building
+            terrain = self.get_tile(x2, y2).terrain
+            if terrain.owner != unit.player:
+                terrain.hp -= unit.hp
+                if terrain.hp < 1:
+                    if terrain.owner is not None:
+                        previous_owner = terrain.owner
+                        previous_owner.buildings.remove(terrain)
+                    terrain.owner = unit.player
+                    unit.player.buildings.append(terrain)
+                    terrain.hp = 20
 
     def remove_unit(self, x, y):  # Removes a unit from the game (because it's dead)
         tile = self.get_tile(x, y)
@@ -117,22 +129,21 @@ class Map:
         tile.unit.die()
         tile.unit = None
 
-
     """
     The Tile class takes care of holding all the information available within one tile of the map
     it doesn't do much expect that
     """
 
+
 class Tile:
     def __init__(self, game, terrain, x, y):
         self.game = game
-        self.highlighted = False       #this indicates if the tile is highlighted
-        self.atk_highlighted = False    #this indicates if the tile is highlighted for an attack
+        self.highlighted = False  # this indicates if the tile is highlighted
+        self.atk_highlighted = False  # this indicates if the tile is highlighted for an attack
         self.unit = None
         self.x = x
         self.y = y
         self.terrain = self.id_terrain(terrain)
-
 
     def add_unit(self, player, type):
         # determines which unit type this tile should have and creates it, we use the letter from
@@ -140,16 +151,10 @@ class Tile:
         # this function will have to be update to identify the new units
         if type == 'i':
             self.unit = Infantry(player, self.game, self.x, self.y)
-            if player == PLAYER1:
-                self.game.player1_units.append(self.unit)
-            if player == PLAYER2:
-                self.game.player2_units.append(self.unit)
+            player.units.append(self.unit)
         elif type == 't':
             self.unit = Tank(player, self.game, self.x, self.y)
-            if player == PLAYER1:
-                self.game.player1_units.append(self.unit)
-            if player == PLAYER2:
-                self.game.player2_units.append(self.unit)
+            player.units.append(self.unit)
         elif type == '.':
             return None
 
@@ -172,8 +177,3 @@ class Tile:
             return Road(self.game, self.x, self.y)
         elif type == 'c':
             return City(self.game, self.x, self.y)
-
-
-
-
-

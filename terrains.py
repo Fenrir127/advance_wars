@@ -56,8 +56,8 @@ class Plain(Terrain):
         super().__init__(game)     # the super init doesn't really do anything for now
         self.sprite = Plain_sprite(game, x, y)
         self.name = "Plain"
-
         self.defense = 1
+        self.type = LAND
 
         # every terrain class must define the mvt cost for all movement types
         # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
@@ -76,6 +76,7 @@ class River(Terrain):
         self.sprite = River_sprite(game, x, y)
         self.name = "River"
         self.defense = 0
+        self.type = LAND
 
         # every terrain class must define the mvt cost for all movement types
         # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
@@ -94,6 +95,7 @@ class Wood(Terrain):
         self.sprite = Wood_sprite(game, x, y)
         self.name = "Wood"
         self.defense = 2
+        self.type = LAND
 
         # every terrain class must define the mvt cost for all movement types
         # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
@@ -112,6 +114,7 @@ class Mountain(Terrain):
         self.sprite = Mountain_sprite(game, x, y)
         self.name = "Mountain"
         self.defense = 4
+        self.type = LAND
 
         # every terrain class must define the mvt cost for all movement types
         # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
@@ -129,6 +132,7 @@ class Sea(Terrain):
         self.sprite = Sea_sprite(game, x, y)
         self.name = "Sea"
         self.defense = 0
+        self.type = WATER
 
         # every terrain class must define the mvt cost for all movement types
         # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
@@ -147,6 +151,7 @@ class Road(Terrain):
         self.sprite = Road_sprite(game, x, y)
         self.name = "Road"
         self.defense = 0
+        self.type = LAND
 
         # every terrain class must define the mvt cost for all movement types
         # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
@@ -165,6 +170,8 @@ class City(Terrain):
         self.sprite = City_sprite(game, x, y)
         self.name = "City"
         self.defense = 3
+        self.type = BUILDING
+        self.hp = 20
 
         # every terrain class must define the mvt cost for all movement types
         # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
@@ -178,7 +185,5 @@ class City(Terrain):
         self.owner = None
 
     def add_funds(self):
-        if self.owner == PLAYER1:
-            self.game.player1[FUNDS] += 1000
-        elif self.owner == PLAYER2:
-            self.game.player2[FUNDS] += 1000
+        self.owner.funds += 1000
+
