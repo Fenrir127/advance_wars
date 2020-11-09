@@ -149,7 +149,7 @@ class Tile:
             self.unit = Tank(player, self.game, self.x, self.y)
             player.units.append(self.unit)
         elif type == 'a':
-            self.unit = APC(player, self.game, self.x, self.y)
+            self.unit = Apc(player, self.game, self.x, self.y)
             player.units.append(self.unit)
         elif type == '.':
             return None

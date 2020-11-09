@@ -88,8 +88,10 @@ class Infantry(Unit):
         self.name = "Infantry"
         self.fuel = 99
         self.damage = 3
+        self.ammo = 0
+        self.type = INFANTRY
         self.movement = 3
-        self.hp = 10
+        self.hp = 100
         self.mvt_type = INFANTRY      # All unit need a movement type, check settings for all movement types
         self.sprite = Infantry_sprite(game, x, y, self.player.ID)
         self.available = None
@@ -106,14 +108,16 @@ class Tank(Unit):
         self.name = "Tank"
         self.fuel = 70
         self.damage = 5
+        self.ammo = 9
+        self.type = TANK
         self.movement = 6
-        self.hp = 10
+        self.hp = 100
         self.mvt_type = TREAD        # All unit need a movement type, check settings for all movement types
         self.sprite = Tank_sprite(game, x, y, self.player.ID)
         self.available = None
         self.can_attack = True
 
-class APC(Unit):
+class Apc(Unit):
     def __init__(self, player, game, x, y):
         super().__init__()  # the super init doesn't really do anything for now
         self.x = x
@@ -123,8 +127,10 @@ class APC(Unit):
         self.name = "APC"
         self.fuel = 99
         self.damage = 5
+        self.ammo = 0
+        self.type = APC
         self.movement = 6
-        self.hp = 10
+        self.hp = 100
         self.mvt_type = TREAD        # All unit need a movement type, check settings for all movement types
         self.sprite = APC_sprite(game, x, y, self.player.ID)
         self.available = None

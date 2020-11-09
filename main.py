@@ -3,6 +3,7 @@ import sys
 from map import *
 from os import path
 import math
+import random
 
 
 class Game:
@@ -465,7 +466,7 @@ class Game:
 
     def direct_atk_highlight(self, x, y):
         # highlight tile that can be attacked
-        # only direct attacks are implemented, so all unit can attack other unit directly adjacent to themn
+        # only direct attacks are implemented, so all unit can attack other unit directly adjacent to them
         if y - 1 >= 0:
             self.map.atk_highlight_tile(x, y - 1)  # up
         if x - 1 >= 0:
@@ -477,23 +478,35 @@ class Game:
 
     def direct_atk_enemy_highlight(self, x, y):
         # highlight tile that can be attacked
-        # only direct attacks are implemented, so all unit can attack other unit directly adjacent to themn
+        # only direct attacks are implemented, so all unit can attack other unit directly adjacent to them
+        unit = self.map.get_unit(x, y)
+
         if y - 1 >= 0:
             if self.map.is_unit(x, y - 1):
-                if self.map.get_unit(x, y - 1).player.ID != self.turn:
+                if self.can_attack(unit, x, y - 1) and self.map.get_unit(x, y - 1).player.ID != self.turn:
                     self.map.atk_highlight_tile(x, y - 1)  # up
         if x - 1 >= 0:
             if self.map.is_unit(x - 1, y):
-                if self.map.get_unit(x - 1, y).player.ID != self.turn:
+                if self.can_attack(unit, x - 1, y) and self.map.get_unit(x - 1, y).player.ID != self.turn:
                     self.map.atk_highlight_tile(x - 1, y)  # left
         if x + 1 <= 31:
             if self.map.is_unit(x + 1, y):
-                if self.map.get_unit(x + 1, y).player.ID != self.turn:
+                if self.can_attack(unit, x + 1, y) and self.map.get_unit(x + 1, y).player.ID != self.turn:
                     self.map.atk_highlight_tile(x + 1, y)  # right
         if y + 1 <= 23:
             if self.map.is_unit(x, y + 1):
-                if self.map.get_unit(x, y + 1).player.ID != self.turn:
+                if self.can_attack(unit, x, y + 1) and self.map.get_unit(x, y + 1).player.ID != self.turn:
                     self.map.atk_highlight_tile(x, y + 1)  # down
+
+    def can_attack(self, attacker, x, y):
+        attacker_type = attacker.type
+        defender = self.map.get_unit(x, y)
+        if attacker.ammo and main_wpn[defender.type][attacker.type]:
+            return True
+        elif alt_wpn[attacker.type][defender.type]:
+            return True
+        else:
+            return False
 
     def capture_building(self, x, y):
         unit = self.map.get_unit(x, y)
@@ -506,21 +519,46 @@ class Game:
             terrain.owner = unit.player
 
 
-    def atk_target(self, x, y, x2, y2):
+    def atk_target(self, x, y, x2, y2, counter = True):
         # this function takes care of damage calculation and updating the corresponding hp
         # Real damage calculation not implemented
         attacker = self.map.get_unit(x, y)
         defender = self.map.get_unit(x2, y2)
-        defender_defense = self.map.get_defense(x2, y2)  # TODO maybe put the defense a unit has in the unit class?
-        damage_dealt = attacker.damage - defender_defense
-        if damage_dealt < 0:
-            damage_dealt = 0
-        self.preview_text.text.clear()
-        text = "You dealt " + str(damage_dealt) + " damage"
-        self.preview_text.text.append(text)
-        defender.hp -= damage_dealt
+        defender_def = self.map.get_defense(x2, y2)
+
+        base_dmg = 0
+        weapon_used = ALT
+
+        if not attacker.can_attack:
+            return
+
+        if attacker.ammo:
+            main_wpn_dmg = main_wpn[defender.type][attacker.type]
+            alt_wpn_dmg = alt_wpn[defender.type][attacker.type]
+            if main_wpn_dmg > alt_wpn_dmg:
+                base_dmg = main_wpn_dmg
+                weapon_used = MAIN
+            else:
+                base_dmg = alt_wpn_dmg
+                weapon_used = ALT
+        else:
+            alt_wpn_dmg = alt_wpn[defender.type][attacker.type]
+            base_dmg = alt_wpn_dmg
+            weapon_used = ALT
+
+        final_dmg = (base_dmg + random.randint(0, 9)) * (math.ceil(attacker.hp/10)/10) * ((100 - (defender_def * (math.ceil(defender.hp/10)/10)))/100)
+        final_dmg = round(final_dmg)
+        defender.hp -= final_dmg
         if defender.hp < 1:
             self.map.remove_unit(x2, y2)
+        if weapon_used == MAIN:
+            attacker.ammo -= 1
+
+        self.preview_text.text.clear()
+        text = "You dealt " + str(final_dmg) + " damage PRINT NOT IMPLEMENTED"
+        self.preview_text.text.append(text)
+        if counter:
+            self.atk_target(x2, y2, x, y, False)
 
     def merge_unit(self, x, y, x2, y2):
         unit1 = self.map.get_unit(x, y)
@@ -587,6 +625,8 @@ class Game:
         elif unit.player.ID == PLAYER2:
             text = "Player: Blue"
         self.unit_text.text.append(text)
+        text = "Ammo left: " + str(unit.ammo)
+        self.unit_text.text.append(text)
 
     def print_terrain_details(self, x, y):
         # pretty much just takes info from the terrain class and appends them to the textbox text list to print
@@ -639,7 +679,7 @@ class Game:
         damage = attacker_dmg - defense
         if damage < 0:
             damage = 0
-        text = "Damage you will deal " + str(damage)
+        text = "Damage you will deal PRINT NOT IMPLEMENTED" + str(damage)
         self.preview_text.text.append(text)
 
     def print_merge_preview(self, x, y, x2, y2):
