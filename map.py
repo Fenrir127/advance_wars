@@ -78,19 +78,20 @@ class Map:
 
     def highlight_tile(self, x, y):  # highlights a tile
         if not self.get_tile(x, y).highlighted:
-            self.get_tile(x, y).highlighted = True
-            Highlight(self.game, x, y)
+            self.get_tile(x, y).highlighted = Highlight(self.game, x, y)
 
     def atk_highlight_tile(self, x, y):
         if not self.get_tile(x, y).atk_highlighted:
-            self.get_tile(x, y).atk_highlighted = True
-            Atk_highlight(self.game, x, y)
+            self.get_tile(x, y).atk_highlighted = Atk_highlight(self.game, x, y)
+
 
     def atk_unhighlight_tile(self, x, y):
-        self.get_tile(x, y).atk_highlighted = False
+        self.get_tile(x, y).atk_highlighted.kill()
+        self.get_tile(x, y).atk_highlighted = None
 
     def unhighlight_tile(self, x, y):  # unhighlights a tile
-        self.get_tile(x, y).highlighted = False
+        self.get_tile(x, y).highlighted.kill()
+        self.get_tile(x, y).highlighted = None
 
     def is_unit(self, x, y):  # returns if a tile has a unit on it
         if self.get_tile(x, y).unit:
@@ -115,12 +116,13 @@ class Map:
 
     def remove_unit(self, x, y):  # Removes a unit from the game (because it's dead)
         tile = self.get_tile(x, y)
-        if tile.unit.player == PLAYER1:
-            self.game.player1_units.remove(tile.unit)
-        elif tile.unit.player == PLAYER2:
-            self.game.player2_units.remove(tile.unit)
+        tile.unit.player.units.remove(tile.unit)
         tile.unit.die()
+        del tile.unit
         tile.unit = None
+
+    def capture(self, x, y, player):
+        self.get_tile(x, y).terrain.new_owner(player)
 
     """
     The Tile class takes care of holding all the information available within one tile of the map
@@ -131,8 +133,8 @@ class Map:
 class Tile:
     def __init__(self, game, terrain, x, y):
         self.game = game
-        self.highlighted = False  # this indicates if the tile is highlighted
-        self.atk_highlighted = False  # this indicates if the tile is highlighted for an attack
+        self.highlighted = None  # this indicates if the tile is highlighted
+        self.atk_highlighted = None  # this indicates if the tile is highlighted for an attack
         self.unit = None
         self.x = x
         self.y = y
@@ -150,6 +152,9 @@ class Tile:
             player.units.append(self.unit)
         elif type == 'a':
             self.unit = Apc(player, self.game, self.x, self.y)
+            player.units.append(self.unit)
+        elif type == 'r':
+            self.unit = Artillery(player, self.game, self.x, self.y)
             player.units.append(self.unit)
         elif type == '.':
             return None
@@ -171,5 +176,21 @@ class Tile:
             return Sea(self.game, self.x, self.y)
         elif type == 'd':
             return Road(self.game, self.x, self.y)
+        elif type == 'a':
+            return City(self.game, self.x, self.y, self.game.player1)
+        elif type == 'b':
+            return City(self.game, self.x, self.y, self.game.player2)
         elif type == 'c':
-            return City(self.game, self.x, self.y)
+            return City(self.game, self.x, self.y, None)
+        elif type == 'R':
+            return HQ(self.game, self.x, self.y, self.game.player1)
+        elif type == 'B':
+            return HQ(self.game, self.x, self.y, self.game.player2)
+        elif type == 'h':
+            return Beach(self.game, self.x, self.y)
+        elif type == 'e':
+            return Factory(self.game, self.x, self.y, self.game.player1)
+        elif type == 'f':
+            return Factory(self.game, self.x, self.y, self.game.player2)
+        elif type == 'g':
+            return Factory(self.game, self.x, self.y, None)

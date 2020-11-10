@@ -77,15 +77,26 @@ class Sea_sprite(pg.sprite.Sprite):
         self.groups = game.terrain_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        # self.image = self.game.mountain_image
-        self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image.fill(BLUE)
+        self.image = self.game.sea_image
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
 
+
+class Beach_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.name = "beach"
+        self.groups = game.terrain_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = self.game.beach_image
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
 
 class Road_sprite(pg.sprite.Sprite):
     def __init__(self, game, x, y):
@@ -94,8 +105,6 @@ class Road_sprite(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = self.game.road_image
-        # self.image = pg.Surface((TILESIZE, TILESIZE))
-        # self.image.fill(GREEN)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
@@ -104,20 +113,60 @@ class Road_sprite(pg.sprite.Sprite):
 
 
 class City_sprite(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.name = "mountain"
+    def __init__(self, game, x, y, owner):
+        self.name = "city"
         self.groups = game.terrain_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        # self.image = self.game.road_image
-        self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image.fill(GREEN)
+        if owner is None:
+            self.image = self.game.city_neutral_image
+        elif owner.ID == Red:
+            self.image = self.game.city_red_image
+        elif owner.ID == Blue:
+            self.image = self.game.city_blue_image
+
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
 
+
+class Factory_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y, owner):
+        self.name = "city"
+        self.groups = game.terrain_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        if owner is None:
+            self.image = self.game.factory_neutral_image
+        elif owner.ID == Red:
+            self.image = self.game.factory_red_image
+        elif owner.ID == Blue:
+            self.image = self.game.factory_blue_image
+
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+
+class Hq_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y, owner):
+        self.name = "hq"
+        self.groups = game.terrain_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        if owner.ID == Red:
+            self.image = self.game.hq_red_image
+        elif owner.ID == Blue:
+            self.image = self.game.hq_blue_image
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
 
 # ------------------------Units----------------------------
 
@@ -139,7 +188,6 @@ class Infantry_sprite(pg.sprite.Sprite):
         self.rect.y = y * TILESIZE
 
 
-
 class Tank_sprite(pg.sprite.Sprite):
     def __init__(self, game, x, y, color):
         self.name = "tank"
@@ -156,6 +204,7 @@ class Tank_sprite(pg.sprite.Sprite):
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
 
+
 class APC_sprite(pg.sprite.Sprite):
     def __init__(self, game, x, y, color):
         self.name = "APC"
@@ -166,6 +215,23 @@ class APC_sprite(pg.sprite.Sprite):
             self.image = self.game.apc_red_image
         elif color == Blue:
             self.image = self.game.apc_blue_image
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+
+class Artillery_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y, color):
+        self.name = "Artillery"
+        self.groups = game.unit_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        if color == Red:
+            self.image = self.game.artillery_red_image
+        elif color == Blue:
+            self.image = self.game.artillery_blue_image
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y

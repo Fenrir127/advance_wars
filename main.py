@@ -58,6 +58,8 @@ class Game:
         self.tank_blue_image = pg.image.load(path.join(img_folder, 'tank_blue.png')).convert_alpha()
         self.apc_red_image = pg.image.load(path.join(img_folder, 'apc_red.png')).convert_alpha()
         self.apc_blue_image = pg.image.load(path.join(img_folder, 'apc_blue.png')).convert_alpha()
+        self.artillery_red_image = pg.image.load(path.join(img_folder, 'artillery_red.png')).convert_alpha()
+        self.artillery_blue_image = pg.image.load(path.join(img_folder, 'artillery_blue.png')).convert_alpha()
 
         # Terrain
         self.plain_image = pg.image.load(path.join(img_folder, 'plain.png')).convert_alpha()
@@ -65,6 +67,16 @@ class Game:
         self.wood_image = pg.image.load(path.join(img_folder, 'wood.png')).convert_alpha()
         self.mountain_image = pg.image.load(path.join(img_folder, 'mountain.png')).convert_alpha()
         self.road_image = pg.image.load(path.join(img_folder, 'road.png')).convert_alpha()
+        self.sea_image = pg.image.load(path.join(img_folder, 'sea.png')).convert_alpha()
+        self.city_neutral_image = pg.image.load(path.join(img_folder, 'city_neutral.png')).convert_alpha()
+        self.city_blue_image = pg.image.load(path.join(img_folder, 'city_blue.png')).convert_alpha()
+        self.city_red_image = pg.image.load(path.join(img_folder, 'city_red.png')).convert_alpha()
+        self.factory_neutral_image = pg.image.load(path.join(img_folder, 'factory_neutral.png')).convert_alpha()
+        self.factory_blue_image = pg.image.load(path.join(img_folder, 'factory_blue.png')).convert_alpha()
+        self.factory_red_image = pg.image.load(path.join(img_folder, 'factory_red.png')).convert_alpha()
+        self.hq_blue_image = pg.image.load(path.join(img_folder, 'hq_blue.png')).convert_alpha()
+        self.hq_red_image = pg.image.load(path.join(img_folder, 'hq_red.png')).convert_alpha()
+        self.beach_image = pg.image.load(path.join(img_folder, 'beach.png')).convert_alpha()
 
         # Highlights
         self.highlight_image = pg.image.load(path.join(img_folder, 'highlight.png')).convert_alpha()
@@ -182,9 +194,17 @@ class Game:
         # Display options after selecting unit
         # Assume user want to move unit for now
         # x, y are the current position while x2, y2 are the new position.
+        unit_selected = False
         self.erase_highlights()
         self.print_details(x, y)
-        if self.map.is_unit(x, y):
+        if self.map.get_terrain(x, y).name == "factory":
+            if self.map.get_terrain(x, y).owner:
+                if self.map.get_terrain(x, y).owner.ID == self.turn:
+                    if self.map.is_unit(x, y):
+                        unit_selected = True
+                    else:
+                        self.factory(x, y)
+        if self.map.is_unit(x, y) or unit_selected is True:
             unit = self.map.get_unit(x, y)
             if unit.player.ID == self.turn:
                 if unit.available:
@@ -198,7 +218,11 @@ class Game:
                         unit.unhighlight()
                     self.erase_highlights()
             else:
-                self.highlight_enemy(self.map.get_unit_mvt_type(x, y), self.map.get_mvt(x, y), x, y)
+                if unit.can_attack:
+                    if unit.type == ARTILLERY:
+                        self.indirect_atk_highlight(x, y)
+                    else:
+                        self.highlight_enemy(self.map.get_unit_mvt_type(x, y), self.map.get_mvt(x, y), x, y)
 
     def move_unit(self, x, y):
         # This function takes care of everything related to moving a unit.
@@ -218,7 +242,8 @@ class Game:
                 x2, y2 = self.get_grid_coord()  # Coordinate of the new tile clicked
                 if x2 > 31:  # if x > 31, the user clicked the buttons of a textbox
                     x2, y2 = pg.mouse.get_pos()  # gets the position again but this time in pixel.
-                    if self.cancel_btn.isOver(x2, y2):  # Cancel the move order, currently doesn't really od anything but might change later on
+                    if self.cancel_btn.isOver(x2,
+                                              y2):  # Cancel the move order, currently doesn't really od anything but might change later on
                         show_options = False
                         moved = False
                         position_confirmed = True
@@ -238,6 +263,7 @@ class Game:
                         self.embark_unit(x, y, position_selected[0], position_selected[1])
                 elif self.map.is_highlight(x2, y2) and not self.map.is_unit(x2, y2):
                     # if the tile has a highlight and no unit on it, it is valid and the unit moves
+                    unit = self.map.get_unit(x, y)
                     self.map.move_unit(x, y, x2, y2)  # moves the unit, Map takes care of it
                     position_selected = False
                     self.special_btn.text = ""
@@ -245,6 +271,8 @@ class Game:
                     self.draw()
                     moved = True
                     show_options = True
+                    if unit.type == ARTILLERY:
+                        show_options = False
                     position_confirmed = True
                     self.print_details(x2, y2)
                 elif self.map.is_unit(x2, y2) and self.map.is_highlight(x2, y2):  # Merge 2 units
@@ -260,7 +288,8 @@ class Game:
                         self.print_merge_preview(x, y, x2, y2)
                         self.print_details(x2, y2)
                         self.draw()
-                    elif self.turn == unit2.player.ID and unit2.name == "APC" and not unit2.holding and (unit1.name == "Infantry" or unit1.name == "Mech"):
+                    elif self.turn == unit2.player.ID and unit2.name == "APC" and not unit2.holding and (
+                            unit1.name == "Infantry" or unit1.name == "Mech"):
                         position_selected = (x2, y2)
                         self.special_btn.text = "Embark"
                         self.print_details(x2, y2)
@@ -274,7 +303,6 @@ class Game:
         # It takes the unit mvt type (there are 7 in the game), the unit mvt (how much it can move) and x and y
 
         # TODO Feel free to optimise this function!
-
 
         if mvt == -1 or x < 0 or x > 31 or y < 0 or y > 23:  # if out of movement or out of the game grid, stop
             return
@@ -384,16 +412,64 @@ class Game:
         mvt_type = drop.mvt_type
         if y - 1 >= 0:
             if self.map.get_tile_mvt_cost(mvt_type, x, y - 1) != 0:
-                self.map.atk_highlight_tile(x, y - 1)  # up
+                self.map.highlight_tile(x, y - 1)  # up
         if x - 1 >= 0:
             if self.map.get_tile_mvt_cost(mvt_type, x - 1, y) != 0:
-                self.map.atk_highlight_tile(x - 1, y)  # left
+                self.map.highlight_tile(x - 1, y)  # left
         if x + 1 <= 31:
             if self.map.get_tile_mvt_cost(mvt_type, x + 1, y) != 0:
-                self.map.atk_highlight_tile(x + 1, y)  # right
+                self.map.highlight_tile(x + 1, y)  # right
         if y + 1 <= 23:
             if self.map.get_tile_mvt_cost(mvt_type, x, y + 1) != 0:
-                self.map.atk_highlight_tile(x, y + 1)  # down
+                self.map.highlight_tile(x, y + 1)  # down
+
+    def factory(self, x1, y1):
+        owner = self.map.get_terrain(x1, y1).owner
+        self.attack_btn.text = "Prev"
+        self.special_btn.text = "Next"
+        self.end_turn_btn.text = "Confirm"
+        self.cancel_btn.text = "Cancel"
+        confirmed = False
+        selected_unit_name, selected_unit_symbol = self.print_factory_preview(None, owner)
+        iterator = None
+        self.draw()
+        while not confirmed:  # loops until the user clicks a tile
+            event = pg.event.wait()
+            if event.type == pg.MOUSEBUTTONDOWN:  # enters when the user clicks on tile
+                x, y = pg.mouse.get_pos()
+                if self.cancel_btn.isOver(x, y):
+                    confirmed = True
+                elif self.end_turn_btn.isOver(x, y) and selected_unit_symbol != '.':
+                    if owner.funds > unit_costs[selected_unit_name]:
+                        confirmed = True
+                        self.map.get_tile(x1, y1).add_unit(owner, selected_unit_symbol)
+                        owner.funds -= unit_costs[selected_unit_name]
+                    else:
+                        iterator = None
+                        selected_unit_name = None
+                        selected_unit_symbol = '.'
+                        self.preview_text.text.clear()
+                        text = "You don't have enough funds for this unit"
+                        self.preview_text.text.append(text)
+
+                elif self.attack_btn.isOver(x, y):
+                    if iterator is None:
+                        iterator = 9
+                    else:
+                        iterator -= 1
+                        if iterator < 0:
+                            iterator = 9
+                    selected_unit_name, selected_unit_symbol = self.print_factory_preview(iterator, owner)
+                elif self.special_btn.isOver(x, y):
+                    if iterator is None:
+                        iterator = 0
+                    else:
+                        iterator += 1
+                        if iterator > 9:
+                            iterator = 0
+                    selected_unit_name, selected_unit_symbol = self.print_factory_preview(iterator, owner)
+            self.draw()
+
 
     def options(self, old_x, old_y, x, y):
         # This function takes care of handling everything related to attacking.
@@ -402,7 +478,10 @@ class Game:
         # it can be cancelled by clicking the cancel button, as of the call of this function, the unit has moved to a different location from it's original.
         # If we want to cancel everything, we need to move it back to it's original spot and we need the old x and y for that
         if self.map.get_unit(x, y).can_attack:
-            self.direct_atk_enemy_highlight(x, y)  # Highlights tiles that can be attacked
+            if self.map.get_unit(x, y).type == ARTILLERY:
+                self.indirect_atk_enemy_highlight(x, y)  # Highlights tiles that can be attacked
+            else:
+                self.direct_atk_enemy_highlight(x, y)
         if self.map.get_unit(x, y).name == "APC":
             if self.map.get_unit(x, y).holding:
                 self.special_btn.text = "Drop"
@@ -441,8 +520,6 @@ class Game:
                         self.drop_unit(x, y, target_selected[0], target_selected[1])
                         target_confirmed = True
                         acted = True
-
-
                 elif self.map.is_atk_highlight(x2, y2):
                     self.print_details(x2, y2)
                     if self.map.get_unit(x, y).can_attack:
@@ -450,11 +527,26 @@ class Game:
                         self.attack_btn.text = "Confirm Atk"
                     target_selected = (x2, y2)
                     self.draw()
-                elif self.map.get_terrain(x2, y2).type == BUILDING and x2 == x and y2 == y and (self.map.get_unit(x, y).name == "Infantry" or self.map.get_unit(x, y).name == "Mech"):
-                    if self.map.get_terrain(x2, y2).owner != self.turn:
+                elif self.map.is_highlight(x2, y2):
+                    self.print_details(x2, y2)
+                    target_selected = (x2, y2)
+                    self.draw()
+                elif self.map.get_terrain(x2, y2).type == BUILDING and x2 == x and y2 == y and (
+                        self.map.get_unit(x, y).name == "Infantry" or self.map.get_unit(x, y).name == "Mech"):
+                    if not self.map.get_terrain(x2, y2).owner:  # TODO find better way to do this
                         self.special_btn.text = "Capture"
                         self.draw()
                         target_selected = True
+                    elif self.map.get_terrain(x2, y2).owner.ID != self.turn:
+                        self.special_btn.text = "Capture"
+                        self.draw()
+                        target_selected = True
+                elif self.special_btn.text == "Drop":
+                    target_selected = False
+                    self.special_btn.text = ""
+                    self.preview_text.text.clear()
+                    self.print_details(x2, y2)
+                    self.draw()
                 else:
                     target_selected = False
                     self.special_btn.text = ""
@@ -475,6 +567,24 @@ class Game:
             self.map.atk_highlight_tile(x + 1, y)  # right
         if y + 1 <= 23:
             self.map.atk_highlight_tile(x, y + 1)  # down
+
+    def indirect_atk_highlight(self, x, y):
+        _range = self.map.get_unit(x, y).range
+        range_max = _range[1]
+        range_min = _range[0] - 1
+        for dy in range(y - range_max, y + range_max + 1):
+            for dx in range(x - range_max + (abs(y - dy)), x + range_max - (abs(y - dy)) + 1):
+                if dx == x and dy == y:
+                    pass
+                elif 0 <= dy <= 23 and 0 <= dx <= 31:
+                    self.map.atk_highlight_tile(dx, dy)
+        for dy in range(y - range_min, y + range_min + 1):
+            for dx in range(x - range_min + (abs(y - dy)), x + range_min - (abs(y - dy)) + 1):
+                if dx == x and dy == y:
+                    pass
+                elif 0 <= dy <= 23 and 0 <= dx <= 31:
+                    if self.map.is_atk_highlight(dx, dy):
+                        self.map.atk_unhighlight_tile(dx, dy)
 
     def direct_atk_enemy_highlight(self, x, y):
         # highlight tile that can be attacked
@@ -498,12 +608,31 @@ class Game:
                 if self.can_attack(unit, x, y + 1) and self.map.get_unit(x, y + 1).player.ID != self.turn:
                     self.map.atk_highlight_tile(x, y + 1)  # down
 
+    def indirect_atk_enemy_highlight(self, x, y):
+        unit = self.map.get_unit(x, y)
+        _range = unit.range
+        range_max = _range[1]
+        range_min = _range[0] - 1
+        for dy in range(y - range_max, y + range_max + 1):
+            for dx in range(x - range_max + (abs(y - dy)), x + range_max - (abs(y - dy)) + 1):
+                if dx == x and dy == y:
+                    pass
+                if self.map.is_unit(dx, dy):
+                    if self.can_attack(unit, dx, dy) and self.map.get_unit(dx, dy).player.ID != self.turn:
+                        self.map.atk_highlight_tile(dx, dy)
+        for dy in range(y - range_min, y + range_min + 1):
+            for dx in range(x - range_min + (abs(y - dy)), x + range_min - (abs(y - dy)) + 1):
+                if dx == x and dy == y:
+                    pass
+                elif self.map.is_atk_highlight(dx, dy):
+                    self.map.atk_unhighlight_tile(dx, dy)
+
     def can_attack(self, attacker, x, y):
         attacker_type = attacker.type
         defender = self.map.get_unit(x, y)
         if attacker.ammo and main_wpn[defender.type][attacker.type]:
             return True
-        elif alt_wpn[attacker.type][defender.type]:
+        elif alt_wpn[defender.type][attacker.type]:
             return True
         else:
             return False
@@ -512,14 +641,13 @@ class Game:
         unit = self.map.get_unit(x, y)
         terrain = self.map.get_terrain(x, y)
 
-        damage = unit.hp
+        damage = math.ceil(unit.hp/10)
         terrain.hp -= damage
         if terrain.hp < 1:
-            terrain.hp = 10
-            terrain.owner = unit.player
+            terrain.hp = 20
+            self.map.capture(x, y, unit.player)
 
-
-    def atk_target(self, x, y, x2, y2, counter = True):
+    def atk_target(self, x, y, x2, y2, counter=True):
         # this function takes care of damage calculation and updating the corresponding hp
         # Real damage calculation not implemented
         attacker = self.map.get_unit(x, y)
@@ -531,6 +659,8 @@ class Game:
 
         if not attacker.can_attack:
             return
+        if attacker.type == ARTILLERY:
+            counter = False
 
         if attacker.ammo:
             main_wpn_dmg = main_wpn[defender.type][attacker.type]
@@ -546,11 +676,13 @@ class Game:
             base_dmg = alt_wpn_dmg
             weapon_used = ALT
 
-        final_dmg = (base_dmg + random.randint(0, 9)) * (math.ceil(attacker.hp/10)/10) * ((100 - (defender_def * (math.ceil(defender.hp/10)/10)))/100)
+        final_dmg = (base_dmg + random.randint(0, 9)) * (math.ceil(attacker.hp / 10) / 10) * (
+                    (100 - (defender_def * (math.ceil(defender.hp / 10) / 10))) / 100)
         final_dmg = round(final_dmg)
         defender.hp -= final_dmg
         if defender.hp < 1:
             self.map.remove_unit(x2, y2)
+            counter = False
         if weapon_used == MAIN:
             attacker.ammo -= 1
 
@@ -583,7 +715,6 @@ class Game:
         unit = dropper.holding
         self.map.drop_unit(x2, y2, unit)
         dropper.holding = None
-
 
     def new_turn(self):
         self.erase_highlights()
@@ -627,6 +758,10 @@ class Game:
         self.unit_text.text.append(text)
         text = "Ammo left: " + str(unit.ammo)
         self.unit_text.text.append(text)
+        if unit.type == ARTILLERY:
+            _range = unit.range
+            text = "Range: " + str(_range[0]) + ", " + str(_range[1])
+            self.unit_text.text.append(text)
 
     def print_terrain_details(self, x, y):
         # pretty much just takes info from the terrain class and appends them to the textbox text list to print
@@ -672,14 +807,16 @@ class Game:
             self.terrain_text.text.append(text)
 
     def print_atk_preview(self, x, y, x2, y2):
-        attacker_dmg = self.map.get_unit(x, y).damage
-        defense = self.map.get_terrain(x2, y2).defense
-
-        self.preview_text.text.clear()
-        damage = attacker_dmg - defense
-        if damage < 0:
-            damage = 0
-        text = "Damage you will deal PRINT NOT IMPLEMENTED" + str(damage)
+        # attacker_dmg = self.map.get_unit(x, y).damage
+        # defense = self.map.get_terrain(x2, y2).defense
+        #
+        #
+        #
+        # self.preview_text.text.clear()
+        # damage = attacker_dmg - defense
+        # if damage < 0:
+        #     damage = 0
+        text = "Damage you will deal PRINT NOT IMPLEMENTED"  # + str(damage)
         self.preview_text.text.append(text)
 
     def print_merge_preview(self, x, y, x2, y2):
@@ -697,6 +834,60 @@ class Game:
             hp = FULL_HP
         text = "Merged unit will have " + str(hp) + "hp with " + str(excess) + " excess"
         self.preview_text.text.append(text)
+
+    def print_factory_preview(self, selected_unit, player):
+        if selected_unit is None:
+            self.preview_text.text.clear()
+            text = "You have " + str(player.funds) + " funds available"
+            self.preview_text.text.append(text)
+            return None, '.'
+        else:
+            unit = factory_units[selected_unit]
+            name, symbol = self.get_unit_name(unit)
+            cost = unit_costs[unit]
+            self.preview_text.text.clear()
+            text = name + ": " + str(cost)
+            self.preview_text.text.append(text)
+            return unit, symbol
+
+    def get_unit_name(self, unit):
+        if unit == INFANTRY:
+            return "Infantry", 'i'
+        elif unit == MECH:
+            return "Mech", 'i'
+        elif unit == RECON:
+            return "Recon", 'i'
+        elif unit == TANK:
+            return "Tank", 't'
+        elif unit == MDTANK:
+            return "MdTank", 'i'
+        elif unit == ARTILLERY:
+            return "Artillery", 'r'
+        elif unit == ROCKETS:
+            return "Rockets", 'i'
+        elif unit == ANTIAIR:
+            return "Antiair", 'i'
+        elif unit == MISSILES:
+            return "Missiles", 'i'
+        elif unit == BCOPTER:
+            return "Battlecopter", 'i'
+        elif unit == FIGHTER:
+            return "Fighter", 'i'
+        elif unit == BOMBER:
+            return "Bomber", 'i'
+        elif unit == CRUISER:
+            return "Cruise", 'i'
+        elif unit == SUB:
+            return "Sub", 'i'
+        elif unit == BSHIP:
+            return "Battleship", 'i'
+        elif unit == APC:
+            return "APC", 'a'
+        elif unit == TCOPTER:
+            return "Transport Copter", 'i'
+        elif unit == LANDER:
+            return "Lander", 'i'
+
 
 
 class Player:
@@ -736,7 +927,7 @@ class Button:
             font = pg.font.SysFont('timesnewroman', 40)
             text = font.render(self.text, 1, BLACK)
             self.screen.blit(text, (
-            self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
+                self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
 
     def isOver(self, x, y):  # indicates is mouse is over button
         if x > self.x and x < self.x + self.width:

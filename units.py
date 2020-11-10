@@ -31,6 +31,7 @@ class Unit:
         self.sprite = None
         self.available = None
         self.can_attack = None
+        self.embarked = False
 
     def end_turn(self):
         if self.available:
@@ -38,6 +39,8 @@ class Unit:
             self.available = None
 
     def new_turn(self):
+        if self.embarked:
+            return
         self.available = Available(self.game, self.x, self.y)
 
     def die(self):
@@ -64,12 +67,12 @@ class Unit:
 
     def embark(self):
         self.sprite.kill()
+        self.embarked = True
         if self.available:
             self.available.kill()
 
     def drop(self, x, y):
-        print("im dropping in")
-        print(x, y)
+        self.embarked = False
         if self.name == "Infantry":
             self.sprite = Infantry_sprite(self.game, self.x, self.y, self.player.ID)
         elif self.name == "Tank":
@@ -87,7 +90,6 @@ class Infantry(Unit):
         self.player = player
         self.name = "Infantry"
         self.fuel = 99
-        self.damage = 3
         self.ammo = 0
         self.type = INFANTRY
         self.movement = 3
@@ -107,7 +109,6 @@ class Tank(Unit):
         self.player = player
         self.name = "Tank"
         self.fuel = 70
-        self.damage = 5
         self.ammo = 9
         self.type = TANK
         self.movement = 6
@@ -116,6 +117,7 @@ class Tank(Unit):
         self.sprite = Tank_sprite(game, x, y, self.player.ID)
         self.available = None
         self.can_attack = True
+
 
 class Apc(Unit):
     def __init__(self, player, game, x, y):
@@ -126,7 +128,6 @@ class Apc(Unit):
         self.player = player
         self.name = "APC"
         self.fuel = 99
-        self.damage = 5
         self.ammo = 0
         self.type = APC
         self.movement = 6
@@ -137,3 +138,22 @@ class Apc(Unit):
         self.can_attack = False
         self.holding = None
 
+
+class Artillery(Unit):
+    def __init__(self, player, game, x, y):
+        super().__init__()  # the super init doesn't really do anything for now
+        self.x = x
+        self.y = y
+        self.game = game
+        self.player = player
+        self.name = "Artillery"
+        self.fuel = 50
+        self.ammo = 9
+        self.type = ARTILLERY
+        self.range = (2, 3)
+        self.movement = 5
+        self.hp = 100
+        self.mvt_type = TREAD        # All unit need a movement type, check settings for all movement types
+        self.sprite = Artillery_sprite(game, x, y, self.player.ID)
+        self.available = None
+        self.can_attack = True

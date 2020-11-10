@@ -145,6 +145,25 @@ class Sea(Terrain):
         self.transport_mvt_cost = 1
 
 
+class Beach(Terrain):
+    def __init__(self, game, x, y):
+        super().__init__(game)       # the super init doesn't really do anything for now
+        self.sprite = Beach_sprite(game, x, y)
+        self.name = "Sea"
+        self.defense = 0
+        self.type = WATER
+
+        # every terrain class must define the mvt cost for all movement types
+        # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
+        self.infantry_mvt_cost = 1
+        self.mech_mvt_cost = 1
+        self.tires_mvt_cost = 2
+        self.tread_mvt_cost = 1
+        self.air_mvt_cost = 1
+        self.ship_mvt_cost = 0
+        self.transport_mvt_cost = 1
+
+
 class Road(Terrain):
     def __init__(self, game, x, y):
         super().__init__(game)     # the super init doesn't really do anything for now
@@ -165,11 +184,73 @@ class Road(Terrain):
 
 
 class City(Terrain):
-    def __init__(self, game, x, y):
+    def __init__(self, game, x, y, owner):
         super().__init__(game)     # the super init doesn't really do anything for now
-        self.sprite = City_sprite(game, x, y)
+        self.sprite = City_sprite(game, x, y, owner)
         self.name = "City"
         self.defense = 3
+        self.type = BUILDING
+        self.hp = 20
+        self.x = x
+        self.y = y
+
+        # every terrain class must define the mvt cost for all movement types
+        # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
+        self.infantry_mvt_cost = 1
+        self.mech_mvt_cost = 1
+        self.tires_mvt_cost = 1
+        self.tread_mvt_cost = 1
+        self.air_mvt_cost = 1
+        self.ship_mvt_cost = 0
+        self.transport_mvt_cost = 0
+        self.owner = owner
+
+    def add_funds(self):
+        self.owner.funds += 1000
+
+    def new_owner(self, player):
+        self.sprite.kill()
+        self.sprite = City_sprite(self.game, self.x, self.y, player)
+        self.owner = player
+
+
+class Factory(Terrain):
+    def __init__(self, game, x, y, owner):
+        super().__init__(game)     # the super init doesn't really do anything for now
+        self.sprite = Factory_sprite(game, x, y, owner)
+        self.name = "factory"
+        self.defense = 3
+        self.type = BUILDING
+        self.hp = 20
+        self.x = x
+        self.y = y
+
+        # every terrain class must define the mvt cost for all movement types
+        # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile
+        self.infantry_mvt_cost = 1
+        self.mech_mvt_cost = 1
+        self.tires_mvt_cost = 1
+        self.tread_mvt_cost = 1
+        self.air_mvt_cost = 1
+        self.ship_mvt_cost = 0
+        self.transport_mvt_cost = 0
+        self.owner = owner
+
+    def add_funds(self):
+        self.owner.funds += 1000
+
+    def new_owner(self, player):
+        self.sprite.kill()
+        self.sprite = City_sprite(self.game, self.x, self.y, player)
+        self.owner = player
+
+
+class HQ(Terrain):
+    def __init__(self, game, x, y, owner):
+        super().__init__(game)     # the super init doesn't really do anything for now
+        self.sprite = Hq_sprite(game, x, y, owner)
+        self.name = "HQ"
+        self.defense = 4
         self.type = BUILDING
         self.hp = 20
 
@@ -182,8 +263,17 @@ class City(Terrain):
         self.air_mvt_cost = 1
         self.ship_mvt_cost = 0
         self.transport_mvt_cost = 0
-        self.owner = None
+        self.owner = owner
+        if owner is not None:
+            self.owner.buildings.append(self)
 
     def add_funds(self):
         self.owner.funds += 1000
 
+    def new_owner(self, player):
+        print("You win the game!")
+        self.game.preview_text.text = ""
+        self.game.preview_text.text = "You win the game!!!"
+        self.game.draw()
+        while 1:
+            pass
