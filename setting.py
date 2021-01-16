@@ -1,4 +1,8 @@
 # define some colors (R, G, B)
+"""
+    Settings, change settings here to modify the game environment. Some things shouldn't be modified. In general, only modify
+    GRID_X_SIZE, GRID_Y_SIZE, TILESIZE, some colors. This hasn't been tested really though
+"""
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 DARKGREY = (40, 40, 40)
@@ -9,14 +13,25 @@ YELLOW = (255, 255, 0)
 BLUE = (0, 0, 255)
 
 # game settings
-SCREEN_WIDTH = 1504
-GRID_WIDTH = 1024  # 16 * 64 or 32 * 32 or 64 * 16
-HEIGHT = 768  # 16 * 48 or 32 * 24 or 64 * 12
-FPS = 60
-TITLE = "Advance Wars"
-BGCOLOR = DARKGREY
+GRID_X_SIZE = 32
+GRID_Y_SIZE = 24
+
+MAP_TO_LOAD = 'terrain_32x24.txt'
+PLAYER1_UNIT_TO_LOAD = 'player1_unit_32x24.txt'
+PLAYER2_UNIT_TO_LOAD = 'player2_unit_32x24.txt'
 
 TILESIZE = 32
+
+SCREEN_WIDTH = 1504
+SCREEN_HEIGHT = 768
+
+GRID_WIDTH = GRID_X_SIZE * TILESIZE
+GRID_HEIGHT = GRID_Y_SIZE * TILESIZE
+FPS = 60
+TITLE = "Basic Wars"
+BGCOLOR = DARKGREY
+
+
 # GRIDWIDTH = GRID_WIDTH / TILESIZE
 # GRIDHEIGHT = HEIGHT / TILESIZE
 
@@ -26,9 +41,8 @@ PLAYER2 = 1
 
 NB_PLAYER = 2
 
-ID = 0
-
-CO = 0
+#ID = 0
+#CO = 0
 FUNDS = 1
 
 # UNIT MVT TYPES
@@ -55,17 +69,32 @@ SONJA = 10
 STURM = 11
 
 # Game General
-FULL_HP = 10
+FULL_HP = 100
 STARTING_FUNDS = 10000
 
 # Terrain types
 LAND = 0
-WATER = 0
+WATER = 2
 BUILDING = 1
 
+# Player colors
 Red = 0
 Blue = 1
 Neutral = 2
+
+# Building
+CITY = 0
+FACTORY = 1
+AIRPORT = 2
+PORT = 3
+HQ = 4
+
+# Unit element
+# LAND = 0
+# AIR = 4
+# WATER = 2
+
+
 
 # Units
 
@@ -88,8 +117,14 @@ APC = 15
 TCOPTER = 16
 LANDER = 17
 
-# THESE ARE THE SHITTY ASS TABLES FOR DAMAGE
+# THESE ARE THE EFFING !@#$ TABLES FOR DAMAGE
 # TOOK ME FRICKING 2 HOURS TO MAKE BETTER BE GRATEFUL!!!!
+# Do not change please, I will murder someone
+
+# To access how much a unit deals damage to another, figure out which weapon it is using (Main or Alt) and
+# search the table using this method main_wpn[defender type][attacker type]
+# defender and attacker type are units value seen above Ex BCOPTER = 9
+# If a 0 is returned, it means the unit can't attack target
 
 MAIN = 0
 ALT = 1
@@ -136,6 +171,40 @@ alt_wpn = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ]
 
+# this list is used to cycle through what units can be spawned from a factory
 factory_units = [INFANTRY, MECH, RECON, APC, ARTILLERY, TANK, ANTIAIR, MISSILES, ROCKETS, MDTANK]
+# airpot list
+# sea port list
 
+# Cost for each unit, used when spawning a unit in factory, airport, seaport
 unit_costs = [1000, 3000, 4000, 7000, 16000, 6000, 15000, 8000, 12000, 9000, 20000, 22000, 18000, 20000, 28000, 5000, 5000, 12000]
+
+# Max ammo for each unit, used when refueling by APC
+max_ammo = [0, 3, 0, 9, 8, 9, 6, 9, 6, 6, 9, 9, 9, 6, 9, 0, 0, 0]
+
+# Max fuel for each unit, used when refueling by APC
+max_fuel = [99, 70, 80, 70, 50, 99, 50, 60, 50, 99, 99, 99, 99, 60, 99, 70, 99, 99]
+
+# End of turn fuel cost (only for sea and air unit)
+fuel_cost = [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 5, 5, 1, 1, 1, 0, 2, 1]
+
+unit_name_symbol = [
+    ("Infantry", 'i'),
+    ("Mech", 'm'),
+    ("Recon", 'n'),
+    ("Tank", 't'),
+    ("MdTank", 'T'),
+    ("Artillery", 'r'),
+    ("Rockets", 'k'),
+    ("Antiair", 'y'),
+    ("Missiles", 'l'),
+    ("Battlecopter", 'i'),
+    ("Fighter", 'i'),
+    ("Bomber", 'i'),
+    ("Cruise", 'i'),
+    ("Sub", 'i'),
+    ("Battleship", 'i'),
+    ("APC", 'a'),
+    ("Transport Copter", 'i'),
+    ("Lander", 'i')
+]

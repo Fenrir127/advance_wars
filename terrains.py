@@ -4,7 +4,7 @@ from setting import *
 
 """
 This contains all the information for the different terrain in the game
-Nothing should change in there unless there's a way to change terrain in the game which I don't think there is
+Nothing should change in there unless there's a way to change terrain in the game which I don't think there is (except building hp)
 
 When you implement a new terrain in the game you need to:
     Make a new terrain class
@@ -13,8 +13,8 @@ When you implement a new terrain in the game you need to:
 """
 
 
-# TODO create a master class for all terrain maybe?
-# and implement new terrain!
+#TODO do a clean up, lots of info is now unused or redondant and this can be improved
+
 
 
 # This is the master class Terrain which only serves to pass on the function get_mvt_cost()
@@ -190,6 +190,7 @@ class City(Terrain):
         self.name = "City"
         self.defense = 3
         self.type = BUILDING
+        self.building_type = LAND
         self.hp = 20
         self.x = x
         self.y = y
@@ -204,14 +205,19 @@ class City(Terrain):
         self.ship_mvt_cost = 0
         self.transport_mvt_cost = 0
         self.owner = owner
+        if owner is not None:
+            self.owner.buildings.append(self)
 
     def add_funds(self):
         self.owner.funds += 1000
 
     def new_owner(self, player):
+        self.owner.buildings.remove(self)
         self.sprite.kill()
         self.sprite = City_sprite(self.game, self.x, self.y, player)
         self.owner = player
+        self.owner.buildings.append(self)
+
 
 
 class Factory(Terrain):
@@ -221,6 +227,7 @@ class Factory(Terrain):
         self.name = "factory"
         self.defense = 3
         self.type = BUILDING
+        self.building_type = LAND
         self.hp = 20
         self.x = x
         self.y = y
@@ -235,14 +242,18 @@ class Factory(Terrain):
         self.ship_mvt_cost = 0
         self.transport_mvt_cost = 0
         self.owner = owner
+        if owner is not None:
+            self.owner.buildings.append(self)
 
     def add_funds(self):
         self.owner.funds += 1000
 
     def new_owner(self, player):
+        self.owner.buildings.remove(self)
         self.sprite.kill()
         self.sprite = City_sprite(self.game, self.x, self.y, player)
         self.owner = player
+        self.owner.buildings.append(self)
 
 
 class HQ(Terrain):
@@ -252,7 +263,10 @@ class HQ(Terrain):
         self.name = "HQ"
         self.defense = 4
         self.type = BUILDING
+        self.building_type = LAND
         self.hp = 20
+        self.x = x
+        self.y = y
 
         # every terrain class must define the mvt cost for all movement types
         # when a mvt_type cost is 0, it means units with this type of mvt cannot go on the tile

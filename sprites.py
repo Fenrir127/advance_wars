@@ -6,6 +6,8 @@ This contains all the Classes for the sprites
 This is mainly used to draw and not much else
 """
 
+#TODO since most sprite are the same except for the actual image, we can compact almost all this code into 3 class.
+# One for terrain, one for unit and one for highlight.
 
 # ---------------------Terrains---------------------------
 
@@ -238,6 +240,107 @@ class Artillery_sprite(pg.sprite.Sprite):
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
 
+
+class Recon_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y, color):
+        self.name = "recon"
+        self.groups = game.unit_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        if color == Red:
+            self.image = self.game.recon_red_image
+        elif color == Blue:
+            self.image = self.game.recon_blue_image
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+
+class Mech_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y, color):
+        self.name = "mech"
+        self.groups = game.unit_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        if color == Red:
+            self.image = self.game.mech_red_image
+        elif color == Blue:
+            self.image = self.game.mech_blue_image
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+
+class MDTank_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y, color):
+        self.name = "mech"
+        self.groups = game.unit_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        if color == Red:
+            self.image = self.game.mdtank_red_image
+        elif color == Blue:
+            self.image = self.game.mdtank_blue_image
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+
+class Antiair_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y, color):
+        self.name = "mech"
+        self.groups = game.unit_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        if color == Red:
+            self.image = self.game.antiair_red_image
+        elif color == Blue:
+            self.image = self.game.antiair_blue_image
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+
+class Missiles_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y, color):
+        self.name = "mech"
+        self.groups = game.unit_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        if color == Red:
+            self.image = self.game.missiles_red_image
+        elif color == Blue:
+            self.image = self.game.missiles_blue_image
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
+
+
+class Rockets_sprite(pg.sprite.Sprite):
+    def __init__(self, game, x, y, color):
+        self.name = "mech"
+        self.groups = game.unit_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        if color == Red:
+            self.image = self.game.rockets_red_image
+        elif color == Blue:
+            self.image = self.game.rockets_blue_image
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
 
 # ------------------------------Highlight--------------------------
 

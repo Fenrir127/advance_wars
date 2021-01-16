@@ -9,18 +9,18 @@ from terrains import *
 class Map:
     """
     Map has a 32x 24y grid of the gameworld and the terrain, units and highlight in it. It contains all this information
-    and takes care of giving information to Game. It also takes care of moving units and such actions. Later on damage..
+    and takes care of giving information to Game. It also takes care of moving units and such actions.
     """
 
     def __init__(self, game):
         self.game = game
-        self.map = [[0 for x in range(32)] for y in range(24)]
+        self.map = [[0 for x in range(GRID_X_SIZE)] for y in range(GRID_Y_SIZE)]
         map_terrain = []  # temporary array that hold the info of terrains.txt while we copy it
         map_player1_unit = []  # temporary array that hold the info of units.txt while we copy it
         map_player2_unit = []  # temporary array that hold the info of units.txt while we copy it
         map_init = path.dirname(__file__)
-        with open(path.join(map_init, 'terrain.txt'), 'rt') as f1, open(path.join(map_init, 'player1_unit.txt'), 'rt') as f2, \
-                open(path.join(map_init, 'player2_unit.txt'), 'rt') as f3:
+        with open(path.join(map_init, MAP_TO_LOAD), 'rt') as f1, open(path.join(map_init, PLAYER1_UNIT_TO_LOAD), 'rt') as f2, \
+                open(path.join(map_init, PLAYER2_UNIT_TO_LOAD), 'rt') as f3:
             for line in f1:
                 map_terrain.append(line.strip())  # reads and copies the file to the array
             for line in f2:
@@ -33,14 +33,14 @@ class Map:
         # position of the array. I didn't figure out a way to read both text files at the same time and instantiate 
         # the Tile so I had to do this. Feel free to improve it"""
 
-        for x in range(0, 32):
-            for y in range(0, 24):
+        for x in range(0, GRID_X_SIZE):
+            for y in range(0, GRID_Y_SIZE):
                 self.map[y][x] = Tile(self.game, map_terrain[y][x], x, y)  # , map_unit[y][x],
-        for x in range(0, 32):
-            for y in range(0, 24):
+        for x in range(0, GRID_X_SIZE):
+            for y in range(0, GRID_Y_SIZE):
                 self.get_tile(x, y).add_unit(self.game.player1, map_player1_unit[y][x])
-        for x in range(0, 32):
-            for y in range(0, 24):
+        for x in range(0, GRID_X_SIZE):
+            for y in range(0, GRID_Y_SIZE):
                 self.get_tile(x, y).add_unit(self.game.player2, map_player2_unit[y][x])
 
     def get_tile(self, x, y):  # returns reference to a tile on the map
@@ -70,28 +70,30 @@ class Map:
     def get_tile_mvt_cost(self, mvt_type, x, y):  # returns mvt cost for a terrain for a given mvt_type on a given tile
         return self.get_tile(x, y).terrain.get_mvt_cost(mvt_type)
 
-    def is_highlight(self, x, y):
+    def is_highlight(self, x, y):  # returns true if the tile is highlighted
         return self.get_tile(x, y).highlighted
 
-    def is_atk_highlight(self, x, y):
+    def is_atk_highlight(self, x, y):  # returns true if the tile is highlighted with an atk_highlight
         return self.get_tile(x, y).atk_highlighted
 
     def highlight_tile(self, x, y):  # highlights a tile
         if not self.get_tile(x, y).highlighted:
             self.get_tile(x, y).highlighted = Highlight(self.game, x, y)
 
-    def atk_highlight_tile(self, x, y):
+    def atk_highlight_tile(self, x, y):  # atk highlights a tile
         if not self.get_tile(x, y).atk_highlighted:
             self.get_tile(x, y).atk_highlighted = Atk_highlight(self.game, x, y)
 
 
-    def atk_unhighlight_tile(self, x, y):
+    def atk_unhighlight_tile(self, x, y):  # atk unhighlights a tile
         self.get_tile(x, y).atk_highlighted.kill()
         self.get_tile(x, y).atk_highlighted = None
 
     def unhighlight_tile(self, x, y):  # unhighlights a tile
         self.get_tile(x, y).highlighted.kill()
         self.get_tile(x, y).highlighted = None
+        self.get_tile(x, y).fuel_cost = 0
+
 
     def is_unit(self, x, y):  # returns if a tile has a unit on it
         if self.get_tile(x, y).unit:
@@ -104,38 +106,54 @@ class Map:
         self.get_tile(x1, y1).unit = None
         self.get_tile(x2, y2).unit = unit
 
-    def embark_unit(self, x, y):
+    def embark_unit(self, x, y):  # embark a unit on a transport unit
         tile = self.get_tile(x, y)
         tile.unit.embark()
         tile.unit = None
 
-    def drop_unit(self, x, y, unit):
+    def drop_unit(self, x, y, unit):  # drop a unit from a transport
         tile = self.get_tile(x, y)
         unit.drop(x, y)
         tile.unit = unit
 
     def remove_unit(self, x, y):  # Removes a unit from the game (because it's dead)
         tile = self.get_tile(x, y)
+        if tile.unit.type == APC or tile.unit.type == TCOPTER or tile.unit.type == LANDER:
+            if tile.unit.holding:
+                tile.unit.player.units.remove(tile.unit.holding)
+                tile.unit.holding.die()
+                del tile.unit.holding
         tile.unit.player.units.remove(tile.unit)
         tile.unit.die()
         del tile.unit
         tile.unit = None
 
-    def capture(self, x, y, player):
+    def capture(self, x, y, player):  # Capture building
         self.get_tile(x, y).terrain.new_owner(player)
+
+    def building_refuel(self, x, y):  # repairs for units on a friendly building tile
+        if self.is_unit(x, y):
+            unit = self.get_unit(x, y)
+            building = self.get_tile(x, y).terrain
+            if unit.player.ID == building.owner.ID:
+                if building.type == unit.element:
+                    unit.refuel()
+                    unit.hp += 20
+                    if unit.hp > FULL_HP:
+                        unit.hp = FULL_HP
+
 
     """
     The Tile class takes care of holding all the information available within one tile of the map
     it doesn't do much expect that
     """
-
-
 class Tile:
     def __init__(self, game, terrain, x, y):
         self.game = game
         self.highlighted = None  # this indicates if the tile is highlighted
         self.atk_highlighted = None  # this indicates if the tile is highlighted for an attack
         self.unit = None
+        self.fuel_cost = 0
         self.x = x
         self.y = y
         self.terrain = self.id_terrain(terrain)
@@ -155,6 +173,24 @@ class Tile:
             player.units.append(self.unit)
         elif type == 'r':
             self.unit = Artillery(player, self.game, self.x, self.y)
+            player.units.append(self.unit)
+        elif type == 'n':
+            self.unit = Recon(player, self.game, self.x, self.y)
+            player.units.append(self.unit)
+        elif type == 'm':
+            self.unit = Mech(player, self.game, self.x, self.y)
+            player.units.append(self.unit)
+        elif type == 'T':
+            self.unit = MDTank(player, self.game, self.x, self.y)
+            player.units.append(self.unit)
+        elif type == 'y':
+            self.unit = Antiair(player, self.game, self.x, self.y)
+            player.units.append(self.unit)
+        elif type == 'l':
+            self.unit = Missiles(player, self.game, self.x, self.y)
+            player.units.append(self.unit)
+        elif type == 'k':
+            self.unit = Rockets(player, self.game, self.x, self.y)
             player.units.append(self.unit)
         elif type == '.':
             return None
