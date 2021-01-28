@@ -4,6 +4,8 @@ from map import *
 from os import path
 import math
 import random
+import time
+
 
 # TODO Change the name of all the highlight function to make more sense and be more readable, even I get confused
 
@@ -124,6 +126,7 @@ class Game:
 
         # creates the map and the reference
         self.map = Map(self)
+        self.turn_counter = 0
 
     def run(self):
         # game loop, set self.playing = False to end the game
@@ -132,12 +135,25 @@ class Game:
         # Hard coded, player 1 always start the game
         for unit in self.player1.units:
             unit.new_turn()
+            self.draw()
 
         while self.playing:  # game loop
             self.dt = self.clock.tick(FPS) / 1000
             self.events()
             # self.erase_highlights()
             self.draw()
+
+
+    """
+    Only resets units and the map.
+    """
+    def reset(self):
+        self.turn_counter = 0
+        print("I reset")
+        for unit in self.player1.units:
+            unit.die()
+            self.player1.units.remove(unit)
+        self.map.reset()
 
     def quit(self):
         pg.quit()
@@ -171,6 +187,7 @@ class Game:
         for box in self.textboxes:
             box.draw()
         pg.display.flip()
+        time.sleep(0.1)
 
     def events(self):
         # catch all events here
@@ -178,24 +195,42 @@ class Game:
         self.cancel_btn.text = ""
         self.attack_btn.text = ""
         self.special_btn.text = ""
-        for event in pg.event.get():
-            if event.type == pg.QUIT:  # allow close game
-                self.quit()
-            if event.type == pg.KEYDOWN:
-                if event.key == pg.K_ESCAPE:
+        if GAMEMODE == AI:
+            next_turn = True
+            while next_turn:
+                xm, ym, action = self.query_ai()
+                self.interpret_ai(xm, ym, action)
+                self.new_turn()
+                next_turn = False
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:  # allow close game
+                        self.quit()
+                    # if event.type == pg.KEYDOWN:
+                    #     if event.key == pg.K_ESCAPE:
+                    #         xm, ym, action = self.query_ai()
+                    #         self.interpret_ai(xm, ym, action)
+                    #         self.new_turn()
+                    #         next_turn = False
+        else:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:  # allow close game
                     self.quit()
-            if event.type == pg.MOUSEBUTTONDOWN:  # enters when the user click on something
-                x, y = self.get_grid_coord()  # gets the grid coord of where the user clicked in grid x and y
-                if x > GRID_X_SIZE - 1 or y > GRID_Y_SIZE - 1:
-                    # if x or y > GRID_X/Y_SIZE-1, that means the user didn't click the map but clicked the buttons or text box instead
-                    # we need to get the position again but this time in pixel.
-                    x, y = pg.mouse.get_pos()
-                    for button in self.buttons_list:  # checks if any button created are being hovered before clicking
-                        if button.isOver(x, y):
-                            if button == self.end_turn_btn:
-                                self.new_turn()
-                else:
-                    self.tile_selected(x, y)  # Function takes care of actions when selecting a tile
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_ESCAPE:
+                        self.reset()
+                        # self.quit()
+                if event.type == pg.MOUSEBUTTONDOWN:  # enters when the user click on something
+                    x, y = self.get_grid_coord()  # gets the grid coord of where the user clicked in grid x and y
+                    if x > GRID_X_SIZE - 1 or y > GRID_Y_SIZE - 1:
+                        # if x or y > GRID_X/Y_SIZE-1, that means the user didn't click the map but clicked the buttons or text box instead
+                        # we need to get the position again but this time in pixel.
+                        x, y = pg.mouse.get_pos()
+                        for button in self.buttons_list:  # checks if any button created are being hovered before clicking
+                            if button.isOver(x, y):
+                                if button == self.end_turn_btn:
+                                    self.new_turn()
+                    else:
+                        self.tile_selected(x, y)  # Function takes care of actions when selecting a tile
 
     def get_grid_coord(self):  # returns the position of the mouse in grid x and y rather than in pixels
         x, y = pg.mouse.get_pos()
@@ -811,6 +846,9 @@ class Game:
                     self.map.building_refuel(city.x, city.y)
 
         self.turn = (self.turn + 1) % NB_PLAYER
+        self.turn_counter += 1
+        if GAMEMODE == AI and self.turn_counter == 3:
+            self.reset()
         # TODO this is a temporary fix when we want to run games with only one player
         if NB_PLAYER == 1:
             for player in self.players:
@@ -947,6 +985,25 @@ class Game:
             text = name + ": " + str(cost)
             self.preview_text.text.append(text)
             return unit, symbol
+
+    def query_ai(self):
+        unit = self.player1.units[0]
+        x = unit.x
+        y = unit.y
+        deltax = GOAL_POS[0] - x
+        deltay = GOAL_POS[1] - y
+        # TODO C'est ici que tu change pour le test du AI
+        # xm, ym, action = get_action(x, y, deltax, deltay)
+
+        xm, ym, action = 1, 1, "MOVE"
+        return xm, ym, action
+
+    def interpret_ai(self, xm, ym, action):
+        unit = self.player1.units[0]
+
+        self.map.move_unit(unit.x, unit.y, unit.x+xm, unit.y+ym)
+        # TODO take care of action here.
+
 
 """
     Player class holds info for a player, His ID, units, buildings, CO and funds

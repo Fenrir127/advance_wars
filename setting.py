@@ -17,18 +17,46 @@ YELLOW = (255, 255, 0)
 BLUE = (0, 0, 255)
 
 # game settings
-GRID_X_SIZE = 5
-GRID_Y_SIZE = 5
+AI = 0
+PVP = 1
+SOLO = 2
 
-NO_DRAW = True
-NB_PLAYER = 1
+SMALL = 0
+NORMAL = 1
 
-MAP_TO_LOAD = 'terrain_5x5.txt'
-PLAYER1_UNIT_TO_LOAD = 'player1_unit_5x5.txt'
-PLAYER2_UNIT_TO_LOAD = 'player2_unit_5x5.txt'
+MAPSIZE = SMALL
+GAMEMODE = AI
+
+if MAPSIZE == NORMAL:
+    GRID_X_SIZE = 32
+    GRID_Y_SIZE = 24
+    MAP_TO_LOAD = 'terrain_32x24.txt'
+    PLAYER1_UNIT_TO_LOAD = 'player1_unit_32x24.txt'
+    PLAYER2_UNIT_TO_LOAD = 'player2_unit_32x24.txt'
+elif MAPSIZE == SMALL:
+    GRID_X_SIZE = 5
+    GRID_Y_SIZE = 5
+    MAP_TO_LOAD = 'terrain_5x5.txt'
+    PLAYER1_UNIT_TO_LOAD = 'player1_unit_5x5.txt'
+    PLAYER2_UNIT_TO_LOAD = 'player2_unit_5x5.txt'
+
+if GAMEMODE == AI:
+    # TODO Change NO_DRAW if you want to see the AI move or not
+    # NO_DRAW = True
+    NO_DRAW = True
+    NB_PLAYER = 1
+    GOAL_POS = (4, 4)
+
+if GAMEMODE == PVP:
+    NO_DRAW = False
+    NB_PLAYER = 2
+
+if GAMEMODE == SOLO:
+    NO_DRAW = False
+    NB_PLAYER = 1
+
 
 TILESIZE = 32
-
 SCREEN_WIDTH = 1504
 SCREEN_HEIGHT = 768
 
