@@ -1,5 +1,6 @@
 import pygame as pg
 import sys
+import qlearning as Skynet
 from map import *
 from os import path
 import math
@@ -21,7 +22,7 @@ class Game:
         self.screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pg.display.set_caption(TITLE)
         self.clock = pg.time.Clock()
-
+        self.iteration = 0
         self.load_data()  # used for future loading purposes
 
     def load_data(self):  # used for future loading purposes, does nothing for now
@@ -149,10 +150,11 @@ class Game:
     """
     def reset(self):
         self.turn_counter = 0
-        print("I reset")
+        # print("I reset")
         for unit in self.player1.units:
             unit.die()
             self.player1.units.remove(unit)
+        Skynet.reset()
         self.map.reset()
 
     def quit(self):
@@ -847,7 +849,11 @@ class Game:
 
         self.turn = (self.turn + 1) % NB_PLAYER
         self.turn_counter += 1
+        self.iteration += 1
         if GAMEMODE == AI and self.turn_counter == 3:
+            if not NO_DRAW:
+                self.draw()
+                time.sleep(0.1)
             self.reset()
         # TODO this is a temporary fix when we want to run games with only one player
         if NB_PLAYER == 1:
@@ -993,15 +999,24 @@ class Game:
         deltax = GOAL_POS[0] - x
         deltay = GOAL_POS[1] - y
         # TODO C'est ici que tu change pour le test du AI
-        # xm, ym, action = get_action(x, y, deltax, deltay)
+        xm, ym, action = Skynet.get_action(x, y, deltax, deltay)
 
-        xm, ym, action = 1, 1, "MOVE"
+        # xm, ym, action = 1, 1, "MOVE"
+
         return xm, ym, action
 
     def interpret_ai(self, xm, ym, action):
         unit = self.player1.units[0]
 
+        current_deltax = GOAL_POS[0] - unit.x
+        current_deltay = GOAL_POS[1] - unit.y
+
         self.map.move_unit(unit.x, unit.y, unit.x+xm, unit.y+ym)
+        x = unit.x
+        y = unit.y
+        new_deltax = x - GOAL_POS[0]
+        new_deltay = y - GOAL_POS[1]
+        Skynet.get_reward((- new_deltax - new_deltay), action,current_deltax,current_deltay, new_deltax, new_deltay)
         # TODO take care of action here.
 
 

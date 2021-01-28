@@ -43,7 +43,7 @@ elif MAPSIZE == SMALL:
 if GAMEMODE == AI:
     # TODO Change NO_DRAW if you want to see the AI move or not
     # NO_DRAW = True
-    NO_DRAW = True
+    NO_DRAW = False
     NB_PLAYER = 1
     GOAL_POS = (4, 4)
 

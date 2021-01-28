@@ -55,7 +55,7 @@ class Unit:
             self.available.kill()
 
     def move(self, x, y):
-        print("I moved")
+        # print("I moved")
         self.x = x
         self.y = y
         self.sprite.rect.x = x * TILESIZE
