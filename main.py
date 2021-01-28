@@ -111,11 +111,16 @@ class Game:
         # self.rivers = pg.sprite.Group()
 
         # Initialize the players, first number is the player ID, second is the CO
-        self.player1 = Player(PLAYER1, NEUTRAL)
-        self.player2 = Player(PLAYER2, NEUTRAL)
-        self.turn = PLAYER1  # Starting player is player 1
-        self.players = [self.player1,
-                        self.player2]  # List of players, we can have more, need to add to the list and change settings
+        if NB_PLAYER == 2:
+            self.player1 = Player(PLAYER1, NEUTRAL)
+            self.player2 = Player(PLAYER2, NEUTRAL)
+            self.turn = PLAYER1  # Starting player is player 1
+            self.players = [self.player1,
+                            self.player2]  # List of players, we can have more, need to add to the list and change settings
+        elif NB_PLAYER == 1:
+            self.player1 = Player(PLAYER1, NEUTRAL)
+            self.turn = PLAYER1  # Starting player is player 1
+            self.players = [self.player1]
 
         # creates the map and the reference
         self.map = Map(self)
@@ -153,6 +158,8 @@ class Game:
 
     def draw(self):  # draw everything from bottom to top layer
         # we might have to split the draw functions between the text files and the game map later on
+        if NO_DRAW:
+            return
         self.screen.fill(BGCOLOR)
         self.terrain_sprites.draw(self.screen)
         self.unit_sprites.draw(self.screen)
@@ -262,7 +269,7 @@ class Game:
             event = pg.event.wait()
             if event.type == pg.MOUSEBUTTONDOWN:  # enters when the user clicks on tile
                 x2, y2 = self.get_grid_coord()  # Coordinate of the new tile clicked
-                if x2 > GRID_X_SIZE - 1:  # if x > GRID_X_SIZE-1, the user clicked the buttons of a textbox
+                if x2 > GRID_X_SIZE - 1 or y2 > GRID_Y_SIZE - 1:  # if x > GRID_X_SIZE-1, the user clicked the buttons of a textbox
                     x2, y2 = pg.mouse.get_pos()  # gets the position again but this time in pixel.
                     if self.cancel_btn.isOver(x2,
                                               y2):  # Cancel the move order, currently doesn't really do anything but might change later on
@@ -539,7 +546,7 @@ class Game:
             event = pg.event.wait()
             if event.type == pg.MOUSEBUTTONDOWN:  # enters when the user clicks on tile or button
                 x2, y2 = self.get_grid_coord()
-                if x2 > GRID_X_SIZE - 1:
+                if x2 > GRID_X_SIZE - 1 or y2 > GRID_Y_SIZE - 1:
                     x2, y2 = pg.mouse.get_pos()
                     if self.cancel_btn.isOver(x2, y2):  # Cancel everything
                         target_confirmed = True
@@ -708,7 +715,7 @@ class Game:
 
         if not attacker.can_attack:
             return
-        if attacker.type == ARTILLERY:  # if the attack is indirect, there won't be a counter attack from the defender
+        if attacker.type == ARTILLERY or defender.type == ARTILLERY:  # if the attack is indirect, there won't be a counter attack from the defender
             counter = False
 
         if attacker.ammo:
@@ -740,7 +747,7 @@ class Game:
             attacker.ammo -= 1
 
         self.preview_text.text.clear()
-        text = "You dealt " + str(final_dmg) + " damage PRINT NOT IMPLEMENTED"
+        text = "You dealt " + str(final_dmg) + " damage"
         self.preview_text.text.append(text)
         if counter:
             self.atk_target(x2, y2, x, y, False)
@@ -770,6 +777,7 @@ class Game:
         dropper.holding = None
 
     def refuel(self, x, y):  # Refuel surrounding unit function
+        # TODO the refuel function also refuels enemy units.....
         if y - 1 >= 0:
             if self.map.is_unit(x, y - 1):
                 self.map.get_unit(x, y - 1).refuel()
@@ -803,6 +811,11 @@ class Game:
                     self.map.building_refuel(city.x, city.y)
 
         self.turn = (self.turn + 1) % NB_PLAYER
+        # TODO this is a temporary fix when we want to run games with only one player
+        if NB_PLAYER == 1:
+            for player in self.players:
+                for unit in player.units:
+                    unit.new_turn()
 
     def print_unit_details(self, x, y):
         # pretty much just takes info from the unit class and appends them to the textbox text list to print

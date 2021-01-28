@@ -17,7 +17,8 @@ class Map:
         self.map = [[0 for x in range(GRID_X_SIZE)] for y in range(GRID_Y_SIZE)]
         map_terrain = []  # temporary array that hold the info of terrains.txt while we copy it
         map_player1_unit = []  # temporary array that hold the info of units.txt while we copy it
-        map_player2_unit = []  # temporary array that hold the info of units.txt while we copy it
+        if NB_PLAYER != 1:
+            map_player2_unit = []  # temporary array that hold the info of units.txt while we copy it
         map_init = path.dirname(__file__)
         with open(path.join(map_init, MAP_TO_LOAD), 'rt') as f1, open(path.join(map_init, PLAYER1_UNIT_TO_LOAD), 'rt') as f2, \
                 open(path.join(map_init, PLAYER2_UNIT_TO_LOAD), 'rt') as f3:
@@ -25,8 +26,9 @@ class Map:
                 map_terrain.append(line.strip())  # reads and copies the file to the array
             for line in f2:
                 map_player1_unit.append(line.strip())  # reads and copies the file to the array
-            for line in f3:
-                map_player2_unit.append(line.strip())  # reads and copies the file to the array
+            if NB_PLAYER != 1:
+                for line in f3:
+                    map_player2_unit.append(line.strip())  # reads and copies the file to the array
 
         """ this goes through the map array, create tiles for each square and gives which unit and terrain they are
         # we use the 2 temporary array map_terrain and map_unit to instantiate the Tile object in each
@@ -39,9 +41,10 @@ class Map:
         for x in range(0, GRID_X_SIZE):
             for y in range(0, GRID_Y_SIZE):
                 self.get_tile(x, y).add_unit(self.game.player1, map_player1_unit[y][x])
-        for x in range(0, GRID_X_SIZE):
-            for y in range(0, GRID_Y_SIZE):
-                self.get_tile(x, y).add_unit(self.game.player2, map_player2_unit[y][x])
+        if NB_PLAYER != 1:
+            for x in range(0, GRID_X_SIZE):
+                for y in range(0, GRID_Y_SIZE):
+                    self.get_tile(x, y).add_unit(self.game.player2, map_player2_unit[y][x])
 
     def get_tile(self, x, y):  # returns reference to a tile on the map
         return self.map[y][x]

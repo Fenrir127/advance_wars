@@ -1,7 +1,11 @@
 # define some colors (R, G, B)
 """
     Settings, change settings here to modify the game environment. Some things shouldn't be modified. In general, only modify
-    GRID_X_SIZE, GRID_Y_SIZE, TILESIZE, some colors. This hasn't been tested really though
+    GRID_X_SIZE, GRID_Y_SIZE, TILESIZE, PLAYER1_UNIT_TO_LOAD, PLAYER2_UNIT_TO_LOAD and some colors.
+
+    To use another size for the map, Change the GRID_X_SIZE and GRID_Y_SIZE to match the size of your map.
+    Also, change the MAP_TO_LOAD, PLAYER1_UNIT_TO_LOAD, PLAYER2_UNIT_TO_LOAD to load the files you want.
+    This hasn't been thoroughly tested
 """
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -13,12 +17,15 @@ YELLOW = (255, 255, 0)
 BLUE = (0, 0, 255)
 
 # game settings
-GRID_X_SIZE = 32
-GRID_Y_SIZE = 24
+GRID_X_SIZE = 5
+GRID_Y_SIZE = 5
 
-MAP_TO_LOAD = 'terrain_32x24.txt'
-PLAYER1_UNIT_TO_LOAD = 'player1_unit_32x24.txt'
-PLAYER2_UNIT_TO_LOAD = 'player2_unit_32x24.txt'
+NO_DRAW = True
+NB_PLAYER = 1
+
+MAP_TO_LOAD = 'terrain_5x5.txt'
+PLAYER1_UNIT_TO_LOAD = 'player1_unit_5x5.txt'
+PLAYER2_UNIT_TO_LOAD = 'player2_unit_5x5.txt'
 
 TILESIZE = 32
 
@@ -39,7 +46,7 @@ BGCOLOR = DARKGREY
 PLAYER1 = 0
 PLAYER2 = 1
 
-NB_PLAYER = 2
+
 
 #ID = 0
 #CO = 0
