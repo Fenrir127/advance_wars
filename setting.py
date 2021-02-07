@@ -34,18 +34,18 @@ if MAPSIZE == NORMAL:
     PLAYER1_UNIT_TO_LOAD = 'player1_unit_32x24.txt'
     PLAYER2_UNIT_TO_LOAD = 'player2_unit_32x24.txt'
 elif MAPSIZE == SMALL:
-    GRID_X_SIZE = 5
-    GRID_Y_SIZE = 5
-    MAP_TO_LOAD = 'terrain_5x5.txt'
-    PLAYER1_UNIT_TO_LOAD = 'player1_unit_5x5.txt'
-    PLAYER2_UNIT_TO_LOAD = 'player2_unit_5x5.txt'
+    GRID_X_SIZE = 7
+    GRID_Y_SIZE = 7
+    MAP_TO_LOAD = 'terrain_7x7.txt'
+    PLAYER1_UNIT_TO_LOAD = 'player1_unit_7x7.txt'
+    PLAYER2_UNIT_TO_LOAD = 'player2_unit_7x7.txt'
 
 if GAMEMODE == AI:
     # TODO Change NO_DRAW if you want to see the AI move or not
     # NO_DRAW = True
     NO_DRAW = False
     NB_PLAYER = 1
-    GOAL_POS = (4, 4)
+    # GOAL_POS = (4, 4)
 
 if GAMEMODE == PVP:
     NO_DRAW = False

@@ -23,7 +23,11 @@ class Game:
         pg.display.set_caption(TITLE)
         self.clock = pg.time.Clock()
         self.iteration = 0
+        self.success = 0
         self.load_data()  # used for future loading purposes
+
+        if GAMEMODE == AI:
+            self.goal_pos = (random.randint(0, GRID_X_SIZE-1), random.randint(0, GRID_Y_SIZE-1))
 
     def load_data(self):  # used for future loading purposes, does nothing for now
         pass
@@ -156,6 +160,7 @@ class Game:
             self.player1.units.remove(unit)
         Skynet.reset()
         self.map.reset()
+        self.goal_pos = (random.randint(0, GRID_X_SIZE-1), random.randint(0, GRID_Y_SIZE-1))
 
     def quit(self):
         pg.quit()
@@ -178,10 +183,13 @@ class Game:
         # we might have to split the draw functions between the text files and the game map later on
         if NO_DRAW:
             return
+        if GAMEMODE == AI:
+            self.map.highlight_tile(self.goal_pos[0], self.goal_pos[1])
         self.screen.fill(BGCOLOR)
         self.terrain_sprites.draw(self.screen)
         self.unit_sprites.draw(self.screen)
         self.foreground_sprites.draw(self.screen)
+
         self.available_sprites.draw(self.screen)
         self.draw_grid()
         for button in self.buttons_list:
@@ -851,9 +859,10 @@ class Game:
         self.turn_counter += 1
         self.iteration += 1
         if GAMEMODE == AI and self.turn_counter == 3:
+            self.iteration += 1
             if not NO_DRAW:
                 self.draw()
-                time.sleep(0.1)
+            self.erase_highlights()
             self.reset()
         # TODO this is a temporary fix when we want to run games with only one player
         if NB_PLAYER == 1:
@@ -996,8 +1005,8 @@ class Game:
         unit = self.player1.units[0]
         x = unit.x
         y = unit.y
-        deltax = GOAL_POS[0] - x
-        deltay = GOAL_POS[1] - y
+        deltax = self.goal_pos[0] - x
+        deltay = self.goal_pos[1] - y
         # TODO C'est ici que tu change pour le test du AI
         xm, ym, action = Skynet.get_action(x, y, deltax, deltay)
 
@@ -1008,15 +1017,20 @@ class Game:
     def interpret_ai(self, xm, ym, action):
         unit = self.player1.units[0]
 
-        current_deltax = GOAL_POS[0] - unit.x
-        current_deltay = GOAL_POS[1] - unit.y
+        current_deltax = self.goal_pos[0] - unit.x
+        current_deltay = self.goal_pos[1] - unit.y
 
         self.map.move_unit(unit.x, unit.y, unit.x+xm, unit.y+ym)
         x = unit.x
         y = unit.y
-        new_deltax = x - GOAL_POS[0]
-        new_deltay = y - GOAL_POS[1]
-        Skynet.get_reward((- new_deltax - new_deltay), action,current_deltax,current_deltay, new_deltax, new_deltay)
+        new_deltax = x - self.goal_pos[0]
+        new_deltay = y - self.goal_pos[1]
+        if new_deltax == 0 and new_deltay == 0 and self.turn_counter == 2:
+            print("Success!!! at iteration: " + str(self.iteration))
+            self.success += 1
+            print(self.success)
+        if action != -1:
+            Skynet.get_reward((- new_deltax - new_deltay), action,current_deltax,current_deltay, new_deltax, new_deltay)
         # TODO take care of action here.
 
 
