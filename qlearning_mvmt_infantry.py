@@ -208,4 +208,13 @@ def get_reward(reward, new_skynet_x, new_skynet_y, en_new_x, en_new_y):
 
 def reset():
     global epsilon
+    global action
+    global skynet_pos_x
+    global skynet_pos_y
+    global en_pos_x
+    global en_pos_y
     epsilon = epsilon - 0.0001  # Will be 0 after 5000 resets
+    skynet_pos_x = 0
+    skynet_pos_y = 3
+    en_pos_x = 6
+    en_pos_y = 3
