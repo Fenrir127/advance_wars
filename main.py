@@ -1,6 +1,6 @@
 import pygame as pg
 import sys
-import qlearning as Skynet
+import qlearning_mvmt_infantry as Skynet
 from map import *
 from os import path
 import math
@@ -26,13 +26,12 @@ class Game:
         self.success = 0
         self.load_data()  # used for future loading purposes
 
-        if GAMEMODE == AI:
-            self.goal_pos = (random.randint(0, GRID_X_SIZE-1), random.randint(0, GRID_Y_SIZE-1))
 
     def load_data(self):  # used for future loading purposes, does nothing for now
         pass
 
     def new(self):
+        self.iteration
         # initialize all variables and do all the setup for a new game
         # This is where we initialize the buttons and the text boxes
         self.textboxes = []
@@ -118,16 +117,26 @@ class Game:
         # self.rivers = pg.sprite.Group()
 
         # Initialize the players, first number is the player ID, second is the CO
-        if NB_PLAYER == 2:
+        if GAMEMODE == AI_VS_AI:
+            self.player1 = Player(PLAYER1, NEUTRAL)
+            self.player2 = Player(PLAYER2, NEUTRAL)
+            self.turn = PLAYER1  # Starting player is player 1
+            self.players = [self.player1, self.player2]
+            # self.player1 = Player(PLAYER1, NEUTRAL)
+            # self.turn = PLAYER1  # Starting player is player 1
+            # self.players = [self.player1]
+        elif GAMEMODE == PVP:
             self.player1 = Player(PLAYER1, NEUTRAL)
             self.player2 = Player(PLAYER2, NEUTRAL)
             self.turn = PLAYER1  # Starting player is player 1
             self.players = [self.player1,
                             self.player2]  # List of players, we can have more, need to add to the list and change settings
-        elif NB_PLAYER == 1:
-            self.player1 = Player(PLAYER1, NEUTRAL)
-            self.turn = PLAYER1  # Starting player is player 1
-            self.players = [self.player1]
+        # elif GAMEMODE == AI_VS_P:
+        #     pass
+        # elif NB_PLAYER == 1:
+        #     self.player1 = Player(PLAYER1, NEUTRAL)
+        #     self.turn = PLAYER1  # Starting player is player 1
+        #     self.players = [self.player1]
 
         # creates the map and the reference
         self.map = Map(self)
@@ -140,7 +149,7 @@ class Game:
         # Hard coded, player 1 always start the game
         for unit in self.player1.units:
             unit.new_turn()
-            self.draw()
+        self.draw()
 
         while self.playing:  # game loop
             self.dt = self.clock.tick(FPS) / 1000
@@ -153,14 +162,20 @@ class Game:
     Only resets units and the map.
     """
     def reset(self):
+        self.iteration += 1
+        print("At turn: " + str(self.turn_counter))
+        print("Iteration: " + str(self.iteration))
         self.turn_counter = 0
         # print("I reset")
         for unit in self.player1.units:
             unit.die()
             self.player1.units.remove(unit)
+        for unit in self.player2.units:
+            unit.die()
+            self.player1.units.remove(unit)
         Skynet.reset()
         self.map.reset()
-        self.goal_pos = (random.randint(0, GRID_X_SIZE-1), random.randint(0, GRID_Y_SIZE-1))
+        #self.goal_pos = (random.randint(0, GRID_X_SIZE-1), random.randint(0, GRID_Y_SIZE-1))
 
     def quit(self):
         pg.quit()
@@ -183,8 +198,8 @@ class Game:
         # we might have to split the draw functions between the text files and the game map later on
         if NO_DRAW:
             return
-        if GAMEMODE == AI:
-            self.map.highlight_tile(self.goal_pos[0], self.goal_pos[1])
+        # if GAMEMODE == AI:
+        #     self.map.highlight_tile(self.goal_pos[0], self.goal_pos[1])
         self.screen.fill(BGCOLOR)
         self.terrain_sprites.draw(self.screen)
         self.unit_sprites.draw(self.screen)
@@ -197,7 +212,7 @@ class Game:
         for box in self.textboxes:
             box.draw()
         pg.display.flip()
-        time.sleep(0.1)
+        #time.sleep(0.1)
 
     def events(self):
         # catch all events here
@@ -205,22 +220,12 @@ class Game:
         self.cancel_btn.text = ""
         self.attack_btn.text = ""
         self.special_btn.text = ""
-        if GAMEMODE == AI:
-            next_turn = True
-            while next_turn:
-                xm, ym, action = self.query_ai()
-                self.interpret_ai(xm, ym, action)
-                self.new_turn()
-                next_turn = False
-                for event in pg.event.get():
-                    if event.type == pg.QUIT:  # allow close game
-                        self.quit()
-                    # if event.type == pg.KEYDOWN:
-                    #     if event.key == pg.K_ESCAPE:
-                    #         xm, ym, action = self.query_ai()
-                    #         self.interpret_ai(xm, ym, action)
-                    #         self.new_turn()
-                    #         next_turn = False
+        if GAMEMODE == AI_VS_AI:
+            action = self.query_ai()
+            self.interpret_ai(action)
+            for event in pg.event.get():
+                if event.type == pg.QUIT:  # allow close game
+                    self.quit()
         else:
             for event in pg.event.get():
                 if event.type == pg.QUIT:  # allow close game
@@ -857,13 +862,12 @@ class Game:
 
         self.turn = (self.turn + 1) % NB_PLAYER
         self.turn_counter += 1
-        self.iteration += 1
-        if GAMEMODE == AI and self.turn_counter == 3:
-            self.iteration += 1
-            if not NO_DRAW:
-                self.draw()
-            self.erase_highlights()
-            self.reset()
+        # if GAMEMODE == AI_VS_AI and self.turn_counter == 3:
+        #     self.iteration += 1
+        #     if not NO_DRAW:
+        #         self.draw()
+        #     self.erase_highlights()
+        #     self.reset()
         # TODO this is a temporary fix when we want to run games with only one player
         if NB_PLAYER == 1:
             for player in self.players:
@@ -1002,36 +1006,57 @@ class Game:
             return unit, symbol
 
     def query_ai(self):
+        #unit = self.player1.units[0]
+        enn = self.player2.units[0]
+        action = Skynet.get_action(enn.x, enn.y)
+
+        return action
+
+    def interpret_ai(self, action):
         unit = self.player1.units[0]
-        x = unit.x
-        y = unit.y
-        deltax = self.goal_pos[0] - x
-        deltay = self.goal_pos[1] - y
-        # TODO C'est ici que tu change pour le test du AI
-        xm, ym, action = Skynet.get_action(x, y, deltax, deltay)
+        enn = self.player2.units[0]
+        enn_x = enn.x
+        enn_y = enn.y
+        mvt = action[0]
+        attack = action[1]
+        illegal_move = True
+        self.highlight(unit.mvt_type, unit.movement, unit.fuel, unit.x, unit.y)
+        if self.map.is_highlight(unit.x + mvt[0], unit.y + mvt[1]):
+            self.map.move_unit(unit.x, unit.y, unit.x + mvt[0], unit.y + mvt[1])
+            if not (attack[0] == 0 and attack[1] == 0):
+                self.direct_atk_enemy_highlight(unit.x, unit.y)
+                if self.map.is_atk_highlight(unit.x + attack[0], unit.y + attack[1]):
+                    self.atk_target(unit.x, unit.y, unit.x+attack[0], unit.y+attack[1])
+                    illegal_move = False
+                else:
+                    self.map.move_unit(unit.x, unit.y, unit.x - mvt[0], unit.y-mvt[1])
+            else:
+                illegal_move = False
+        self.erase_highlights()
+        self.new_turn()
+        if self.player2.units:
+            pass
+            # ennemy turn here
+        if not self.player1.units:  # If skynet died
+            reward = -2
+            enn = self.player2.units[0]
+            Skynet.get_reward(reward, unit.x, unit.y, enn.x, enn.y)
+            self.reset()
+            print("Fail!")
+        elif not self.player2.units:  # if enn died
+            if illegal_move:
+                reward = -2
+            else:
+                reward = 0
+            Skynet.get_reward(reward, unit.x, unit.y, enn_x, enn_y)
+            self.reset()
+            print("Success!")
+        else:
+            reward = -1
+            enn = self.player2.units[0]
+            Skynet.get_reward(reward, unit.x, unit.y, enn.x, enn.y)
+        self.new_turn()
 
-        # xm, ym, action = 1, 1, "MOVE"
-
-        return xm, ym, action
-
-    def interpret_ai(self, xm, ym, action):
-        unit = self.player1.units[0]
-
-        current_deltax = self.goal_pos[0] - unit.x
-        current_deltay = self.goal_pos[1] - unit.y
-
-        self.map.move_unit(unit.x, unit.y, unit.x+xm, unit.y+ym)
-        x = unit.x
-        y = unit.y
-        new_deltax = x - self.goal_pos[0]
-        new_deltay = y - self.goal_pos[1]
-        if new_deltax == 0 and new_deltay == 0 and self.turn_counter == 2:
-            print("Success!!! at iteration: " + str(self.iteration))
-            self.success += 1
-            print(self.success)
-        if action != -1:
-            Skynet.get_reward((- new_deltax - new_deltay), action,current_deltax,current_deltay, new_deltax, new_deltay)
-        # TODO take care of action here.
 
 
 """
