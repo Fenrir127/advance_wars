@@ -6,7 +6,7 @@ from os import path
 import math
 import random
 import time
-
+import static_ai_agr as static_ai
 
 # TODO Change the name of all the highlight function to make more sense and be more readable, even I get confused
 
@@ -122,6 +122,8 @@ class Game:
             self.player2 = Player(PLAYER2, NEUTRAL)
             self.turn = PLAYER1  # Starting player is player 1
             self.players = [self.player1, self.player2]
+            # if AI_TO_LOAD == AGRESSIVE:
+            #     self.static_ai =
             # self.player1 = Player(PLAYER1, NEUTRAL)
             # self.turn = PLAYER1  # Starting player is player 1
             # self.players = [self.player1]
@@ -166,13 +168,12 @@ class Game:
         print("At turn: " + str(self.turn_counter))
         print("Iteration: " + str(self.iteration))
         self.turn_counter = 0
-        # print("I reset")
         for unit in self.player1.units:
             unit.die()
             self.player1.units.remove(unit)
         for unit in self.player2.units:
             unit.die()
-            self.player1.units.remove(unit)
+            self.player2.units.remove(unit)
         Skynet.reset()
         self.map.reset()
         #self.goal_pos = (random.randint(0, GRID_X_SIZE-1), random.randint(0, GRID_Y_SIZE-1))
@@ -1034,23 +1035,28 @@ class Game:
                 illegal_move = False
         self.erase_highlights()
         self.new_turn()
-        if self.player2.units:
-            pass
-            # ennemy turn here
+        self.draw()
+        if self.player2.units and self.player1.units:
+            new_enn_x, new_enn_y, atk_x, atk_y = static_ai.get_action(enn_x, enn_y, unit.x, unit.y)
+            self.map.move_unit(enn_x, enn_y, new_enn_x, new_enn_y)
+            enn_x = new_enn_x
+            enn_y = new_enn_y
+            if not (atk_x == atk_y == 0):
+                self.atk_target(enn_x, enn_y, enn_x+atk_x, enn_y+atk_y)
         if not self.player1.units:  # If skynet died
             reward = -2
             enn = self.player2.units[0]
             Skynet.get_reward(reward, unit.x, unit.y, enn.x, enn.y)
-            self.reset()
             print("Fail!")
+            self.reset()
         elif not self.player2.units:  # if enn died
             if illegal_move:
                 reward = -2
             else:
                 reward = 0
             Skynet.get_reward(reward, unit.x, unit.y, enn_x, enn_y)
-            self.reset()
             print("Success!")
+            self.reset()
         else:
             reward = -1
             enn = self.player2.units[0]

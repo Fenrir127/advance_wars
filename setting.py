@@ -21,6 +21,9 @@ AI_VS_AI = 0
 PVP = 1
 AI_VS_P = 2
 
+# Static AIs
+AGRESSIVE = 0
+
 SMALL = 0
 NORMAL = 1
 
@@ -44,6 +47,7 @@ if GAMEMODE == AI_VS_AI:
     # TODO Change NO_DRAW if you want to see the AI move or not
     NO_DRAW = True
     NB_PLAYER = 2
+    AI_TO_LOAD = AGRESSIVE
 
 if GAMEMODE == PVP:
     NO_DRAW = False
