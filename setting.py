@@ -17,15 +17,15 @@ YELLOW = (255, 255, 0)
 BLUE = (0, 0, 255)
 
 # game settings
-AI = 0
+AI_VS_AI = 0
 PVP = 1
-SOLO = 2
+AI_VS_P = 2
 
 SMALL = 0
 NORMAL = 1
 
 MAPSIZE = SMALL
-GAMEMODE = AI
+GAMEMODE = AI_VS_AI
 
 if MAPSIZE == NORMAL:
     GRID_X_SIZE = 32
@@ -36,24 +36,22 @@ if MAPSIZE == NORMAL:
 elif MAPSIZE == SMALL:
     GRID_X_SIZE = 7
     GRID_Y_SIZE = 7
-    MAP_TO_LOAD = 'terrain_7x7.txt'
+    MAP_TO_LOAD = 'terrain_1v1_7x7.txt'
     PLAYER1_UNIT_TO_LOAD = 'player1_unit_7x7.txt'
     PLAYER2_UNIT_TO_LOAD = 'player2_unit_7x7.txt'
 
-if GAMEMODE == AI:
+if GAMEMODE == AI_VS_AI:
     # TODO Change NO_DRAW if you want to see the AI move or not
-    # NO_DRAW = True
-    NO_DRAW = False
-    NB_PLAYER = 1
-    # GOAL_POS = (4, 4)
+    NO_DRAW = True
+    NB_PLAYER = 2
 
 if GAMEMODE == PVP:
     NO_DRAW = False
     NB_PLAYER = 2
 
-if GAMEMODE == SOLO:
+if GAMEMODE == AI_VS_P:
     NO_DRAW = False
-    NB_PLAYER = 1
+    NB_PLAYER = 2
 
 
 TILESIZE = 32

@@ -55,6 +55,7 @@ class Map:
         for x in range(0, GRID_X_SIZE):
             for y in range(0, GRID_Y_SIZE):
                 self.get_tile(x, y).add_unit(self.game.player1, self.map_player1_unit[y][x])
+                self.get_tile(x, y).add_unit(self.game.player2, self.map_player2_unit[y][x])
 
 
     def get_tile(self, x, y):  # returns reference to a tile on the map
@@ -85,9 +86,13 @@ class Map:
         return self.get_tile(x, y).terrain.get_mvt_cost(mvt_type)
 
     def is_highlight(self, x, y):  # returns true if the tile is highlighted
+        if x < 0 or x > GRID_X_SIZE - 1 or y < 0 or y > GRID_Y_SIZE - 1:
+            return False
         return self.get_tile(x, y).highlighted
 
     def is_atk_highlight(self, x, y):  # returns true if the tile is highlighted with an atk_highlight
+        if x < 0 or x > GRID_X_SIZE - 1 or y < 0 or y > GRID_Y_SIZE - 1:
+            return False
         return self.get_tile(x, y).atk_highlighted
 
     def highlight_tile(self, x, y):  # highlights a tile

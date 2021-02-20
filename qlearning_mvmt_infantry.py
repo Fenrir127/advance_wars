@@ -1,7 +1,15 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import style
+
+style.use("ggplot")
 
 LEARNING_RATE = 0.1
 DISCOUNT = 0.95
+
+SHOW_EVERY = 500
+episode_rewards = []
+iteration = 0
 
 MAP_SIZE = (7, 7)
 UNIT_SPEED = 3
@@ -204,6 +212,11 @@ def get_reward(reward, new_skynet_x, new_skynet_y, en_new_x, en_new_y):
     en_pos_x = en_new_x
     en_pos_y = en_new_y
     # we update the current q_table's q_value to represent the possibilities of this action
+    global iteration
+    iteration += 1
+    episode_rewards.append(reward) ####
+    if iteration % SHOW_EVERY == 0:
+        graph()
 
 
 def reset():
@@ -218,3 +231,12 @@ def reset():
     skynet_pos_y = 3
     en_pos_x = 6
     en_pos_y = 3
+
+
+def graph():
+    moving_avg = np.convolve(episode_rewards, np.ones((SHOW_EVERY,)) / SHOW_EVERY, mode='valid')
+    plt.plot([i for i in range(len(moving_avg))], moving_avg)
+    plt.ylabel(f"Reward {SHOW_EVERY}ma")
+    plt.xlabel("iteration #")
+    plt.show(block=False)
+    plt.pause(0.1)
