@@ -6,7 +6,7 @@ from os import path
 import math
 import random
 import time
-import static_ai_agr as static_ai
+import static_ai_pas as static_ai
 
 # TODO Change the name of all the highlight function to make more sense and be more readable, even I get confused
 
@@ -168,6 +168,11 @@ class Game:
     """
     def reset(self):
         self.iteration += 1
+        if self.iteration == DRAW_EVERY:
+            NO_DRAW = False
+        else:
+            NO_DRAW = True
+
         self.turn_counter = 0
         for unit in self.player1.units:
             unit.die()
@@ -178,8 +183,8 @@ class Game:
         Skynet.reset()
         x, y = self.get_random_pos()
         enx, eny = self.get_random_pos(x, y)
-        Skynet.set_pos(x, y, enx, eny)
-        self.map.reset(x, y, enx, eny)
+        Skynet.set_pos(1, 3, 5, 3)
+        self.map.reset(1, 3, 5, 3)
 
     def quit(self):
         pg.quit()

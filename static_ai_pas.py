@@ -25,7 +25,8 @@ def get_action(x, y, enx, eny):
     global legal_move
     dx = enx - x
     dy = eny - y
-    if abs(dx) + abs(dy) <= 4:  # if in range
+    best_move_reached = False
+    if abs(dx) + abs(dy) <= 4:  # if potentially in range
         current_best_move_xy = ()
         current_best_move_score = 999
         for move in legal_move:
@@ -35,16 +36,18 @@ def get_action(x, y, enx, eny):
             if total_score < current_best_move_score:  # Find closest pos to target
                 current_best_move_xy = (move[0], move[1])
                 current_best_move_score = total_score
-        dx = enx - current_best_move_xy[0]
-        dy = eny - current_best_move_xy[1]
-    else:
+        if current_best_move_score == 1:  # In range to attack
+            best_move_reached = True
+            dx = enx - current_best_move_xy[0]
+            dy = eny - current_best_move_xy[1]
+    if not best_move_reached:
         current_best_move_xy = ()
-        current_best_move_score = 0
+        current_best_move_score = 999
         for move in legal_move:
             dx = enx - move[0]
             dy = eny - move[1]
             total_score = abs(dx) + abs(dy)
-            if total_score > current_best_move_score:
+            if 4 < total_score < current_best_move_score:
                 current_best_move_xy = (move[0], move[1])
                 current_best_move_score = total_score
         dx = 0
