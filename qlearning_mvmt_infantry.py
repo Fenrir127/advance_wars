@@ -240,3 +240,14 @@ def graph():
     plt.xlabel("iteration #")
     plt.show(block=False)
     plt.pause(0.1)
+
+def set_pos(x, y, en_x, en_y):
+    global skynet_pos_x
+    global skynet_pos_y
+    global en_pos_x
+    global en_pos_y
+
+    skynet_pos_x = x
+    skynet_pos_y = y
+    en_pos_x = en_x
+    en_pos_y = en_y

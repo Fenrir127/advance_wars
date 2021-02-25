@@ -45,15 +45,18 @@ elif MAPSIZE == SMALL:
 
 if GAMEMODE == AI_VS_AI:
     # TODO Change NO_DRAW if you want to see the AI move or not
-    NO_DRAW = True
+    WAIT_TIME = 0.1
+    NO_DRAW = False
     NB_PLAYER = 2
     AI_TO_LOAD = AGRESSIVE
 
 if GAMEMODE == PVP:
+    WAIT_TIME = 0
     NO_DRAW = False
     NB_PLAYER = 2
 
 if GAMEMODE == AI_VS_P:
+    WAIT_TIME = 0
     NO_DRAW = False
     NB_PLAYER = 2
 

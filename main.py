@@ -147,11 +147,14 @@ class Game:
     def run(self):
         # game loop, set self.playing = False to end the game
         self.playing = True
-
+        if GAMEMODE == AI_VS_AI:
+            self.reset()
         # Hard coded, player 1 always start the game
         for unit in self.player1.units:
             unit.new_turn()
         self.draw()
+
+
 
         while self.playing:  # game loop
             self.dt = self.clock.tick(FPS) / 1000
@@ -165,8 +168,6 @@ class Game:
     """
     def reset(self):
         self.iteration += 1
-        print("At turn: " + str(self.turn_counter))
-        print("Iteration: " + str(self.iteration))
         self.turn_counter = 0
         for unit in self.player1.units:
             unit.die()
@@ -175,8 +176,10 @@ class Game:
             unit.die()
             self.player2.units.remove(unit)
         Skynet.reset()
-        self.map.reset()
-        #self.goal_pos = (random.randint(0, GRID_X_SIZE-1), random.randint(0, GRID_Y_SIZE-1))
+        x, y = self.get_random_pos()
+        enx, eny = self.get_random_pos(x, y)
+        Skynet.set_pos(x, y, enx, eny)
+        self.map.reset(x, y, enx, eny)
 
     def quit(self):
         pg.quit()
@@ -213,7 +216,7 @@ class Game:
         for box in self.textboxes:
             box.draw()
         pg.display.flip()
-        #time.sleep(0.1)
+        time.sleep(WAIT_TIME)
 
     def events(self):
         # catch all events here
@@ -1047,7 +1050,6 @@ class Game:
             reward = -2
             enn = self.player2.units[0]
             Skynet.get_reward(reward, unit.x, unit.y, enn.x, enn.y)
-            print("Fail!")
             self.reset()
         elif not self.player2.units:  # if enn died
             if illegal_move:
@@ -1056,15 +1058,30 @@ class Game:
                 reward = 0
             Skynet.get_reward(reward, unit.x, unit.y, enn_x, enn_y)
             print("Success!")
+            print("At turn: " + str(self.turn_counter))
+            print("Iteration: " + str(self.iteration))
             self.reset()
         else:
-            reward = -1
+            if illegal_move:
+                reward = -2
+            else:
+                reward = -1
             enn = self.player2.units[0]
             Skynet.get_reward(reward, unit.x, unit.y, enn.x, enn.y)
         self.new_turn()
 
-
-
+    def get_random_pos(self, nx = None, ny = None):
+        if nx and ny is None:
+            x = random.randint(0, GRID_X_SIZE-1)
+            y = random.randint(0, GRID_X_SIZE - 1)
+            return x, y
+        else:
+            x = random.randint(0, GRID_X_SIZE - 1)
+            y = random.randint(0, GRID_X_SIZE - 1)
+            while x == nx and y == ny:
+                x = random.randint(0, GRID_X_SIZE - 1)
+                y = random.randint(0, GRID_X_SIZE - 1)
+            return x, y
 """
     Player class holds info for a player, His ID, units, buildings, CO and funds
 """
