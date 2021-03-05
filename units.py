@@ -90,6 +90,12 @@ class Unit:
         self.ammo = max_ammo[self.type]
         self.fuel = max_fuel[self.type]
 
+    def get_binary_hp(self):
+        if self.hp > 50:
+            return 1
+        else:
+            return 0
+
 class Infantry(Unit):
     def __init__(self, player, game, x, y):
         super().__init__()  # the super init doesn't really do anything for now

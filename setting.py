@@ -17,9 +17,10 @@ YELLOW = (255, 255, 0)
 BLUE = (0, 0, 255)
 
 # game settings
-AI_VS_AI = 0
+SKYNET_VS_AI = 0
 PVP = 1
 AI_VS_P = 2
+SKYNET_VS_SKYNET = 3
 
 # Static AIs
 AGRESSIVE = 0
@@ -28,7 +29,7 @@ SMALL = 0
 NORMAL = 1
 
 MAPSIZE = SMALL
-GAMEMODE = AI_VS_AI
+GAMEMODE = SKYNET_VS_SKYNET
 
 if MAPSIZE == NORMAL:
     GRID_X_SIZE = 32
@@ -43,13 +44,23 @@ elif MAPSIZE == SMALL:
     PLAYER1_UNIT_TO_LOAD = 'player1_unit_7x7.txt'
     PLAYER2_UNIT_TO_LOAD = 'player2_unit_7x7.txt'
 
-if GAMEMODE == AI_VS_AI:
+if GAMEMODE == SKYNET_VS_AI:
     # TODO Change NO_DRAW if you want to see the AI move or not
-    WAIT_TIME = 0.4
+    WAIT_TIME = 0.1
     NO_DRAW = False
-    DRAW_EVERY = 1000
+    STOP_DRAW_AT = 50
+    DRAW_EVERY = 100
     NB_PLAYER = 2
     AI_TO_LOAD = AGRESSIVE
+
+if GAMEMODE == SKYNET_VS_SKYNET:
+    # TODO Change NO_DRAW if you want to see the AI move or not
+    WAIT_TIME = 0.3
+    NO_DRAW = False
+    STOP_DRAW_AT = 50
+    DRAW_EVERY = 100
+    NB_PLAYER = 2
+    AI_TO_LOAD = None
 
 if GAMEMODE == PVP:
     WAIT_TIME = 0
@@ -60,6 +71,7 @@ if GAMEMODE == AI_VS_P:
     WAIT_TIME = 0
     NO_DRAW = False
     NB_PLAYER = 2
+
 
 
 TILESIZE = 32
@@ -80,7 +92,12 @@ BGCOLOR = DARKGREY
 PLAYER1 = 0
 PLAYER2 = 1
 
+#Scenarios
+DISADVANTAGE = 0
+ADVANTAGE = 1
+NEUTRAL = 2
 
+MAX_SCENARIO_TURN = 20
 
 #ID = 0
 #CO = 0

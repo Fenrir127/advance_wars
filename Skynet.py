@@ -220,7 +220,7 @@ class Skynet:
         if self.iteration % 1000 == 0:
             print(f'AI iterations: {self.iteration}')
             print(f'epsilon: {self.epsilon}')
-        if self.iteration % SHOW_EVERY == 0:
+        if self.iteration % SHOW_EVERY == 0 and self.iteration != 0:
             self.graph()
 
         elif self.iteration == 100000:
