@@ -223,7 +223,7 @@ class Skynet:
         if self.iteration % SHOW_EVERY == 0 and self.iteration != 0:
             self.graph()
 
-        elif self.iteration == 100000:
+        if self.iteration == 100000:
             epsilon = 0.75
         elif self.iteration == 200000:
             epsilon = 0.5

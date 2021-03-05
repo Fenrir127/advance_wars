@@ -49,7 +49,6 @@ class Game:
         self.cancel_btn = Button(self.screen, WHITE, 1264, 640, 240, 128, "Cancel")
         if GAMEMODE == SKYNET_VS_SKYNET:
             self.end_turn_btn = Button(self.screen, WHITE, TILESIZE * GRID_X_SIZE + 20, 0, 240, 128, "End Turn")
-            self.end_turn_btn = Button(self.screen, WHITE, 1024, 640, 240, 128, "End Turn")
         else:
             self.end_turn_btn = Button(self.screen, WHITE, 1024, 640, 240, 128, "End Turn")
         self.special_btn = Button(self.screen, WHITE, 1264, 512, 240, 128, "Cptr/Rfl/Mrg")
