@@ -127,7 +127,7 @@ class Game:
             self.player2 = Player(PLAYER2, NEUTRAL)
             self.turn = PLAYER1  # Starting player is player 1
             self.players = [self.player1, self.player2]
-            self.scenario = None
+            self.scenario_player_1 = None
             self.scenario_counter = 0
             self.next_reward = None
             self.scenarios = ["Stalemate", "Runaway", "Attack"]
@@ -146,7 +146,8 @@ class Game:
             self.player2 = Player(PLAYER2, NEUTRAL)
             self.turn = PLAYER1  # Starting player is player 1
             self.players = [self.player1, self.player2]
-            self.scenario = None
+            self.scenario_player_1 = None
+            self.scenario_player_2 = None
             self.scenario_counter = 0
             self.scenarios = ["Stalemate", "Runaway", "Attack"]
         elif GAMEMODE == PVP:
@@ -227,24 +228,37 @@ class Game:
             x, y = self.get_random_pos()
             enx, eny = self.get_random_pos(x, y)
             self.map.reset(x, y, enx, eny)
-            self.scenario, lhp, rhp = self.get_random_scenario()
-            print("Scenario is " + self.scenarios[self.scenario])
-            self.end_turn_btn.text = str(self.scenarios[self.scenario])
+            self.scenario_player_1, self.scenario_player_2, lhp, rhp = self.get_random_scenario()
+            print("Scenario is " + self.scenarios[self.scenario_player_1])
+            self.end_turn_btn.text = str(self.scenarios[self.scenario_player_1])
 
             self.scenario_counter = 0
             if not lhp:
                 self.player1.units[0].hp = 20
             if not rhp:
                 self.player2.units[0].hp = 20
-            self.skynet1.set_param(x, y, lhp, enx, eny, rhp)
-            self.skynet2.set_param(enx, eny, rhp, x, y, lhp)
+
+            if self.player1.units[0].hp > 50:  # High health:
+                if self.player2.units[0].hp > 50:  # High health: stalemate
+                    self.skynet1.set_param(x, y, 1, enx, eny, 1)
+                    self.skynet2.set_param(enx, eny, 1, x, y, 1)
+                else:  # Low health: attack
+                    self.skynet1.set_param(x, y, 1, enx, eny, 0)
+                    self.skynet2.set_param(enx, eny, 0, x, y, 1)
+            else:
+                if self.player2.units[0].hp > 50:  # High health: run away
+                    self.skynet1.set_param(x, y, 0, enx, eny, 1)
+                    self.skynet2.set_param(enx, eny, 1, x, y, 0)
+
+            # self.skynet1.set_param(x, y, lhp, enx, eny, rhp)
+            # self.skynet2.set_param(enx, eny, rhp, x, y, lhp)
             self.skynets = [self.skynet1, self.skynet2]
         if GAMEMODE == SKYNET_VS_P:
             x, y = self.get_random_pos()
             enx, eny = self.get_random_pos(x, y)
             self.map.reset(x, y, enx, eny)
-            self.scenario, lhp, rhp = self.get_random_scenario()
-            print("Scenario is " + self.scenarios[self.scenario] + " from Skynet's point of view")
+            self.scenario_player_1, self.scenario_player_2, lhp, rhp = self.get_random_scenario()
+            print("Scenario is " + self.scenarios[self.scenario_player_1] + " from Skynet's point of view")
             self.scenario_counter = 0
             if not lhp:
                 self.player1.units[0].hp = 20
@@ -294,7 +308,7 @@ class Game:
         # catch all events here
         self.end_turn_btn.text = "End Turn"
         if GAMEMODE == SKYNET_VS_SKYNET:
-            self.end_turn_btn.text = self.scenarios[self.scenario]
+            self.end_turn_btn.text = self.scenarios[self.scenario_player_1]
         self.cancel_btn.text = ""
         self.attack_btn.text = ""
         self.special_btn.text = ""
@@ -1227,16 +1241,16 @@ class Game:
                     illegal_move = False
                     if not player.units:
                         self.erase_highlights()
-                        skynet.get_reward(-1, unitx, unity, 0, ennx, enny, enn.get_binary_hp(), self.scenario)
-                        other_skynet.get_reward(1, ennx, enny, enn.get_binary_hp(), unitx, unity, 0, self.scenario)
+                        skynet.get_reward(-1, unitx, unity, 0, ennx, enny, enn.get_binary_hp(), self.scenario_player_1)  # TODO: changer scenario pour avoir le bon AI avec le bon scenario
+                        other_skynet.get_reward(1, ennx, enny, enn.get_binary_hp(), unitx, unity, 0, self.scenario_player_2)
                         print("Skynet" + str(self.turn+1) + " attacked and was destroyed")
                         print("Reset on scenario turn " + str(self.scenario_counter))
                         self.reset()
                         return
                     elif not other_player.units:
                         self.erase_highlights()
-                        skynet.get_reward(1, unitx, unity, unit.get_binary_hp(), ennx, enny, 0, self.scenario)
-                        other_skynet.get_reward(-1, ennx, enny, 0, unitx, unity, unit.get_binary_hp(), self.scenario)
+                        skynet.get_reward(1, unitx, unity, unit.get_binary_hp(), ennx, enny, 0, self.scenario_player_1)
+                        other_skynet.get_reward(-1, ennx, enny, 0, unitx, unity, unit.get_binary_hp(), self.scenario_player_2)
                         print("Skynet" + str(self.turn+1) + " attacked and destroyed the enemy")
                         print("Ended on scenario turn " + str(self.scenario_counter))
                         self.reset()
@@ -1250,7 +1264,7 @@ class Game:
         self.draw()
         self.scenario_counter += 1
         if self.next_reward is not None:
-            other_skynet.get_reward(self.next_reward, enn.x, enn.y, enn.get_binary_hp(), unit.x, unit.y, unit.get_binary_hp(), self.scenario)
+            other_skynet.get_reward(self.next_reward, enn.x, enn.y, enn.get_binary_hp(), unit.x, unit.y, unit.get_binary_hp(), self.scenario_player_1)
         if self.scenario_counter == MAX_SCENARIO_TURN:
             print("Ended on scenario turn " + str(MAX_SCENARIO_TURN))
             self.reset()
@@ -1298,17 +1312,20 @@ class Game:
 
     def get_random_scenario(self):
         x = random.randint(0, 2)
-        lhp, rhp = None, None
+        y, lhp, rhp = None, None, None
         if x == 0:  # Both high: Stalemate
+            y = 0
             lhp = 1
             rhp = 1
         elif x == 1:  # Run away
+            y = 2
             lhp = 0
             rhp = 1
         elif x == 2:  # Attack
+            y = 1
             lhp = 1
             rhp = 0
-        return x, lhp, rhp
+        return x, y, lhp, rhp
 
 
 """

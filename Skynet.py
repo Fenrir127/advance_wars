@@ -12,7 +12,7 @@ DISCOUNT = 0.95
 AVG_EVERY = 20
 SCN_SHOW_EVERY = 1000
 
-SHOW_EVERY = 100000
+SHOW_EVERY = 10000
 
 episode_rewards = []
 iteration = 0
@@ -202,12 +202,40 @@ def graph():
     plt.pause(0.1)
 
 
+def update_rewards(reward, scenario):
+    Skynet.rewards_tmp[scenario].append(reward)
+    if len(Skynet.rewards_tmp[scenario]) == AVG_EVERY:
+        Skynet.rewards[scenario].append(
+            sum(Skynet.rewards_tmp[scenario]) / len(Skynet.rewards_tmp[scenario]))  # averages it to save memory
+        Skynet.rewards_tmp[scenario] = []
+
+
+def graph_by_scenario():
+    print(f"Scenario 0: {Skynet.rewards[0]}")
+    print(f"Scenario 1: {Skynet.rewards[1]}")
+    print(f"Scenario 2: {Skynet.rewards[2]}")
+    plt.clf()
+    for index, scn_rewards in enumerate(Skynet.rewards):
+        moving_avg = np.convolve(scn_rewards, np.ones((SCN_SHOW_EVERY, )) / SCN_SHOW_EVERY, mode='valid')
+        plt.plot([i * AVG_EVERY for i in range(len(moving_avg))], moving_avg, label=f'Scenario {index}')
+    plt.title(f"LR={LEARNING_RATE} ; D={DISCOUNT}")
+    plt.ylabel(f"Reward {SCN_SHOW_EVERY}ma")
+    plt.xlabel("iteration #")
+    plt.legend(loc='best')
+    plt.show(block=False)
+    plt.pause(0.1)
+
+
 class Skynet:
+    iteration = 0
+    epsilon = 1
+    rewards = [[], [], []]
+    rewards_tmp = [[], [], []]
 
     def __init__(self, x, y, hp, en_x, en_y, en_hp):
-        self.rewards = [[], [], []]
-        self.rewards_tmp = [[], [], []]
-        self.epsilon = 1
+        # Skynet.rewards = [[], [], []]
+        # Skynet.rewards_tmp = [[], [], []]
+        # Skynet.epsilon = 1
         self.action = 0
         self.skynet_mvt = 3  # Infantry
         self.skynet_range = 1  # Infantry
@@ -217,7 +245,7 @@ class Skynet:
         self.en_pos_x = en_x
         self.en_pos_y = en_y
         self.en_hp = en_hp
-        self.iteration = 0
+        # Skynet.iteration = 0
         self.q_table = np.random.uniform(low=-1, high=1, size=([1, 1, 1, 1, 1, 1] + [1]))  # Just to initialize
         self.mvt_cost_map = init_map()
         self.legal_move = []  # This will be used during get_action, format: (mvt_x, mvt_y, atk_x, atk_y)
@@ -230,7 +258,7 @@ class Skynet:
         #  Get the new list of legal moves
         self.get_legal_move(self.skynet_mvt, self.skynet_pos_x, self.skynet_pos_y, self.en_pos_x, self.en_pos_y)
 
-        if np.random.random() > self.epsilon:  # Maximum value
+        if np.random.random() > Skynet.epsilon:  # Maximum value
             max_value = -2   # Will be overwritten
             max_action = -1  # Will be overwritten
             for move in self.legal_move:
@@ -252,7 +280,7 @@ class Skynet:
         return ACTION_TABLE[self.action]
 
     def get_reward(self, reward, new_skynet_x, new_skynet_y, new_skynet_hp, en_new_x, en_new_y, en_new_hp, scenario):
-        self.update_rewards(reward, scenario)
+        update_rewards(reward, scenario)
         max_future_q = np.max(self.q_table[new_skynet_x, new_skynet_y, new_skynet_hp, en_new_x, en_new_y, en_new_hp])
         # maximum possible value for the next situation
         current_q = self.q_table[self.skynet_pos_x, self.skynet_pos_y, self.skynet_hp, self.en_pos_x, self.en_pos_y,
@@ -272,21 +300,23 @@ class Skynet:
         # we update the current q_table's q_value to represent the possibilities of this action
 
         episode_rewards.append(reward)
-        if self.iteration % 1000 == 0:
-            print(f'AI iterations: {self.iteration}')
-            print(f'epsilon: {self.epsilon}')
-        if self.iteration % SHOW_EVERY == 0 and self.iteration != 0:
-            self.graph_by_scenario()
-        if self.iteration == 100000:
-            self.epsilon = 0.75
-        elif self.iteration == 200000:
-            self.epsilon = 0.5
-        elif self.iteration == 300000:
-            self.epsilon = 0.25
-        elif self.iteration == 400000:
-            self.epsilon = 0
+        if Skynet.iteration % 1000 == 0:
+            print("----------------------------")
+            print(f'AI iterations: {Skynet.iteration}')
+            print(f'Epsilon: {Skynet.epsilon}')
+            print("----------------------------")
+        if Skynet.iteration % SHOW_EVERY == 0 and Skynet.iteration != 0:
+            graph_by_scenario()
+        if Skynet.iteration == 10 * SHOW_EVERY:
+            Skynet.epsilon = 0.75
+        elif Skynet.iteration == 20 * SHOW_EVERY:
+            Skynet.epsilon = 0.5
+        elif Skynet.iteration == 30 * SHOW_EVERY:
+            Skynet.epsilon = 0.25
+        elif Skynet.iteration == 40 * SHOW_EVERY:
+            Skynet.epsilon = 0
 
-        self.iteration += 1
+        Skynet.iteration += 1
 
     def get_legal_move(self, mvt, x, y, enx, eny, direction="None"):
         if mvt < 0 or x < 0 or x > GRID_X_SIZE - 1 or y < 0 or y > GRID_Y_SIZE - 1:  # If tile is out of grid
@@ -323,22 +353,3 @@ class Skynet:
         self.en_pos_x = en_x
         self.en_pos_y = en_y
         self.en_hp = en_hp
-
-    def update_rewards(self, reward, scenario):
-        self.rewards_tmp[scenario].append(reward)
-        if len(self.rewards_tmp[scenario]) == AVG_EVERY:
-            self.rewards[scenario].append(
-                sum(self.rewards_tmp[scenario]) / len(self.rewards_tmp[scenario]))  # averages it to save memory
-            self.rewards_tmp[scenario] = []
-
-    def graph_by_scenario(self):
-        plt.clf()
-        for index, scn_rewards in enumerate(self.rewards):
-            moving_avg = np.convolve(scn_rewards, np.ones((SCN_SHOW_EVERY, )) / SCN_SHOW_EVERY, mode = 'valid')
-            plt.plot([i * AVG_EVERY for i in range(len(moving_avg))], moving_avg, label=f'Scenario {index}')
-        plt.title(f"LR={LEARNING_RATE} ; D={DISCOUNT}")
-        plt.ylabel(f"Reward {SCN_SHOW_EVERY}ma")
-        plt.xlabel("iteration #")
-        plt.legend(loc='best')
-        plt.show(block=False)
-        plt.pause(0.1)
