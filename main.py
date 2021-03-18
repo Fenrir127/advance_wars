@@ -1250,7 +1250,7 @@ class Game:
         self.draw()
         self.scenario_counter += 1
         if self.next_reward is not None:
-            other_skynet.get_reward(self.next_reward, enn.x, enn.y, enn.get_binary_hp(), unit.x, unit.y, unit.get_binary_hp())
+            other_skynet.get_reward(self.next_reward, enn.x, enn.y, enn.get_binary_hp(), unit.x, unit.y, unit.get_binary_hp(), self.scenario)
         if self.scenario_counter == MAX_SCENARIO_TURN:
             print("Ended on scenario turn " + str(MAX_SCENARIO_TURN))
             self.reset()
