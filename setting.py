@@ -19,7 +19,7 @@ BLUE = (0, 0, 255)
 # game settings
 SKYNET_VS_AI = 0
 PVP = 1
-AI_VS_P = 2
+SKYNET_VS_P = 2
 SKYNET_VS_SKYNET = 3
 
 # Static AIs
@@ -29,7 +29,7 @@ SMALL = 0
 NORMAL = 1
 
 MAPSIZE = SMALL
-GAMEMODE = SKYNET_VS_SKYNET
+GAMEMODE = SKYNET_VS_P
 
 if MAPSIZE == NORMAL:
     GRID_X_SIZE = 32
@@ -55,10 +55,10 @@ if GAMEMODE == SKYNET_VS_AI:
 
 if GAMEMODE == SKYNET_VS_SKYNET:
     # TODO Change NO_DRAW if you want to see the AI move or not
-    WAIT_TIME = 0.3
+    WAIT_TIME = 0.1
     NO_DRAW = False
     STOP_DRAW_AT = 50
-    DRAW_EVERY = 100
+    DRAW_EVERY = 10000
     NB_PLAYER = 2
     AI_TO_LOAD = None
 
@@ -67,7 +67,7 @@ if GAMEMODE == PVP:
     NO_DRAW = False
     NB_PLAYER = 2
 
-if GAMEMODE == AI_VS_P:
+if GAMEMODE == SKYNET_VS_P:
     WAIT_TIME = 0
     NO_DRAW = False
     NB_PLAYER = 2
