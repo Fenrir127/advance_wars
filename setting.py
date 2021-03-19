@@ -2,7 +2,6 @@
 """
     Settings, change settings here to modify the game environment. Some things shouldn't be modified. In general, only modify
     GRID_X_SIZE, GRID_Y_SIZE, TILESIZE, PLAYER1_UNIT_TO_LOAD, PLAYER2_UNIT_TO_LOAD and some colors.
-
     To use another size for the map, Change the GRID_X_SIZE and GRID_Y_SIZE to match the size of your map.
     Also, change the MAP_TO_LOAD, PLAYER1_UNIT_TO_LOAD, PLAYER2_UNIT_TO_LOAD to load the files you want.
     This hasn't been thoroughly tested
@@ -29,7 +28,7 @@ SMALL = 0
 NORMAL = 1
 
 MAPSIZE = SMALL
-GAMEMODE = SKYNET_VS_SKYNET
+GAMEMODE = SKYNET_VS_AI
 
 if MAPSIZE == NORMAL:
     GRID_X_SIZE = 32
@@ -46,10 +45,10 @@ elif MAPSIZE == SMALL:
 
 if GAMEMODE == SKYNET_VS_AI:
     # TODO Change NO_DRAW if you want to see the AI move or not
-    WAIT_TIME = 0.1
+    WAIT_TIME = 0.3
     NO_DRAW = False
     STOP_DRAW_AT = 50
-    DRAW_EVERY = 100
+    DRAW_EVERY = 1
     NB_PLAYER = 2
     AI_TO_LOAD = AGRESSIVE
 

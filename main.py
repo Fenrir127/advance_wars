@@ -8,7 +8,7 @@ from os import path
 import math
 import random
 import time
-import static_ai_pas as static_ai
+import static_ai_agr as static_ai
 
 
 
@@ -47,7 +47,7 @@ class Game:
         # This is where we create the buttons
         self.buttons_list = []
         self.cancel_btn = Button(self.screen, WHITE, 1264, 640, 240, 128, "Cancel")
-        if GAMEMODE == SKYNET_VS_SKYNET:
+        if GAMEMODE == SKYNET_VS_SKYNET or GAMEMODE == SKYNET_VS_AI:
             self.end_turn_btn = Button(self.screen, WHITE, TILESIZE * GRID_X_SIZE + 20, 0, 240, 128, "End Turn")
         else:
             self.end_turn_btn = Button(self.screen, WHITE, 1024, 640, 240, 128, "End Turn")
@@ -141,6 +141,8 @@ class Game:
             self.player2 = Player(PLAYER2, NEUTRAL)
             self.turn = PLAYER1  # Starting player is player 1
             self.players = [self.player1, self.player2]
+            self.scenario_counter = 0
+            self.scenarios = ["Stalemate", "Runaway", "Attack"]
         elif GAMEMODE == SKYNET_VS_P:
             self.player1 = Player(PLAYER1, NEUTRAL)
             self.player2 = Player(PLAYER2, NEUTRAL)
@@ -169,16 +171,19 @@ class Game:
     def run(self):
         # game loop, set self.playing = False to end the game
         self.playing = True
-        if GAMEMODE == SKYNET_VS_AI:
-            self.reset()
-            self.turn_counter += 1
-        elif GAMEMODE == SKYNET_VS_SKYNET:
+        if GAMEMODE == SKYNET_VS_SKYNET:
             self.get_random_scenario()
             self.skynet1 = Skynet.Skynet(1, 1, 1, 1, 1, 1)
             self.skynet2 = Skynet.Skynet(1, 1, 1, 1, 1, 1)
             self.q_table = np.random.uniform(low=-1, high=1, size=([7, 7, 2, 7, 7, 2] + [125]))
             self.skynet1.set_q_table(self.q_table)
             self.skynet2.set_q_table(self.q_table)
+            self.reset()
+            self.turn_counter += 1
+        elif GAMEMODE == SKYNET_VS_AI:
+            self.skynet = Skynet.Skynet(1, 1, 1, 1, 1, 1)
+            self.q_table = np.random.uniform(low=-1, high=1, size=([7, 7, 2, 7, 7, 2] + [125]))
+            self.skynet.set_q_table(self.q_table)
             self.reset()
             self.turn_counter += 1
         elif GAMEMODE == SKYNET_VS_P:
@@ -218,11 +223,19 @@ class Game:
             unit.die()
             self.player2.units.remove(unit)
         if GAMEMODE == SKYNET_VS_AI:
-            vsai.reset()
             x, y = self.get_random_pos()
             enx, eny = self.get_random_pos(x, y)
-            vsai.set_pos(x, y, enx, eny)
             self.map.reset(x, y, enx, eny)
+            self.scenario_player_1, self.scenario_player_2, lhp, rhp = self.get_random_scenario()
+            self.scenario_players = [self.scenario_player_1, self.scenario_player_2]
+            print("Scenario is " + self.scenarios[self.scenario_players[0]])
+            self.end_turn_btn.text = str(self.scenarios[self.scenario_players[1]])
+            self.scenario_counter = 0
+            if not lhp:
+                self.player1.units[0].hp = 20
+            if not rhp:
+                self.player2.units[0].hp = 20
+            self.skynet.set_param(x, y, lhp, enx, eny, rhp)
 
         if GAMEMODE == SKYNET_VS_SKYNET:
             self.next_reward = None
@@ -232,7 +245,7 @@ class Game:
             self.scenario_player_1, self.scenario_player_2, lhp, rhp = self.get_random_scenario()
             self.scenario_players = [self.scenario_player_1, self.scenario_player_2]
             print("Scenario is " + self.scenarios[self.scenario_players[0]])
-            self.end_turn_btn.text = str(self.scenarios[self.scenario_players[1]])
+            self.end_turn_btn.text = str(self.scenarios[self.scenario_players[0]])
 
             self.scenario_counter = 0
             if not lhp:
@@ -240,17 +253,8 @@ class Game:
             if not rhp:
                 self.player2.units[0].hp = 20
 
-            if self.player1.units[0].hp > 50:  # High health:
-                if self.player2.units[0].hp > 50:  # High health: stalemate
-                    self.skynet1.set_param(x, y, 1, enx, eny, 1)
-                    self.skynet2.set_param(enx, eny, 1, x, y, 1)
-                else:  # Low health: attack
-                    self.skynet1.set_param(x, y, 1, enx, eny, 0)
-                    self.skynet2.set_param(enx, eny, 0, x, y, 1)
-            else:
-                if self.player2.units[0].hp > 50:  # High health: run away
-                    self.skynet1.set_param(x, y, 0, enx, eny, 1)
-                    self.skynet2.set_param(enx, eny, 1, x, y, 0)
+            self.skynet1.set_param(x, y, lhp, enx, eny, rhp)
+            self.skynet2.set_param(enx, eny, rhp, x, y, lhp)
 
             # self.skynet1.set_param(x, y, lhp, enx, eny, rhp)
             # self.skynet2.set_param(enx, eny, rhp, x, y, lhp)
@@ -309,14 +313,13 @@ class Game:
     def events(self):
         # catch all events here
         self.end_turn_btn.text = "End Turn"
-        if GAMEMODE == SKYNET_VS_SKYNET:
+        if GAMEMODE == SKYNET_VS_SKYNET or GAMEMODE == SKYNET_VS_AI:
             self.end_turn_btn.text = self.scenarios[self.scenario_player_1]
         self.cancel_btn.text = ""
         self.attack_btn.text = ""
         self.special_btn.text = ""
         if GAMEMODE == SKYNET_VS_AI:
-            action = self.query_ai()
-            self.interpret_ai(action)
+            self.interpret_ai()
             for event in pg.event.get():
                 if event.type == pg.QUIT:  # allow close game
                     self.quit()
@@ -517,7 +520,6 @@ class Game:
         # This function takes care of highlighting tiles of available movement for a unit
         # It is a recurring function that stops once an impassable terrain is reached or the max movement is reached or fuel runs out
         # It takes the unit mvt type (there are 7 in the game), the unit mvt (how much it can move) and x and y and fuel remaining
-
         # TODO Feel free to optimise this function!
 
         if mvt == -1 or fuel < 0 or x < 0 or x > GRID_X_SIZE - 1 or y < 0 or y > GRID_Y_SIZE - 1:  # if out of movement or out of the game grid, stop
@@ -1142,18 +1144,12 @@ class Game:
             self.preview_text.text.append(text)
             return unit, symbol
 
-    def query_ai(self):
-        # unit = self.player1.units[0]
-        enn = self.player2.units[0]
-        action = vsai.get_action(enn.x, enn.y)
-
-        return action
-
-    def interpret_ai(self, action):
-        unit = self.player1.units[0]
-        enn = self.player2.units[0]
-        enn_x = enn.x
-        enn_y = enn.y
+    def interpret_ai(self):
+        player = self.players[self.turn]
+        other_player = self.players[(self.turn + 1) % NB_PLAYER]
+        unit = player.units[0]
+        enn = other_player.units[0]
+        action = self.skynet.get_action()
         mvt = action[0]
         attack = action[1]
         illegal_move = True
@@ -1163,13 +1159,26 @@ class Game:
             if not (attack[0] == 0 and attack[1] == 0):
                 self.direct_atk_enemy_highlight(unit.x, unit.y)
                 if self.map.is_atk_highlight(unit.x + attack[0], unit.y + attack[1]):
+                    unitx = unit.x
+                    unity = unit.y
+                    ennx = enn.x
+                    enny = enn.y
                     self.atk_target(unit.x, unit.y, unit.x + attack[0], unit.y + attack[1])
-                    print("Skynet attacked")
                     illegal_move = False
-                    if not self.player2.units:
-                        result = "Skynet killed AI by attacking it"
-                    elif not self.player1.units:
-                        result = "Skynet killed himself by attacking the AI"
+                    if not player.units:
+                        self.erase_highlights()
+                        self.skynet.get_reward(-1, unitx, unity, 0, ennx, enny, enn.get_binary_hp(), self.scenario_players[0])
+                        print("Skynet attacked and was destroyed")
+                        print("Reset on scenario turn " + str(self.scenario_counter))
+                        self.reset()
+                        return
+                    elif not other_player.units:
+                        self.erase_highlights()
+                        self.skynet.get_reward(1, unitx, unity, unit.get_binary_hp(), ennx, enny, 0, self.scenario_players[0])
+                        print("Skynet attacked and destroyed the enemy")
+                        print("Ended on scenario turn " + str(self.scenario_counter))
+                        self.reset()
+                        return
                 else:
                     self.map.move_unit(unit.x, unit.y, unit.x - mvt[0], unit.y - mvt[1])
             else:
@@ -1177,46 +1186,51 @@ class Game:
         self.erase_highlights()
         self.new_turn()
         self.draw()
-        if self.player2.units and self.player1.units:
-            new_enn_x, new_enn_y, atk_x, atk_y = static_ai.get_action(enn_x, enn_y, unit.x, unit.y)
-            self.map.move_unit(enn_x, enn_y, new_enn_x, new_enn_y)
-            enn_x = new_enn_x
-            enn_y = new_enn_y
-            if not (atk_x == atk_y == 0):
-                print(enn_x, enn_y, enn_x + atk_x, enn_y + atk_y)
-                self.atk_target(enn_x, enn_y, enn_x + atk_x, enn_y + atk_y)
-                if not self.player1.units:
-                    result = "AI killed Skynet by attacking it"
-                elif not self.player2.units:
-                    result = "Ai killed himself by attacking Skynet---------------------------------"
-            # self.new_turn()
-        if not self.player1.units:  # If skynet died
-            reward = -1
-            enn = self.player2.units[0]
-            vsai.get_reward(reward, unit.x, unit.y, enn.x, enn.y)
-            print(result)
+        self.scenario_counter += 1
 
+        # STATIC AI PHASE
+        new_enn_x, new_enn_y, atk_x, atk_y = static_ai.get_action(enn.x, enn.y, unit.x, unit.y)
+        self.map.move_unit(enn.x, enn.y, new_enn_x, new_enn_y)
+        enn_x = new_enn_x
+        enn_y = new_enn_y
+        unitx = unit.x
+        unity = unit.y
+        result = "Something wrong happened, I'm not suppose to print"
+        if not (atk_x == atk_y == 0):
+            self.atk_target(enn_x, enn_y, enn_x + atk_x, enn_y + atk_y)
+            if not self.player1.units:
+                result = "AI killed Skynet by attacking it"
+            elif not self.player2.units:
+                result = "AI killed himself by attacking Skynet"
+        self.new_turn()
+        # REWARD
+        if not self.player1.units:  # if skynet died
+            enn = self.player2.units[0]
+            self.skynet.get_reward(-1, unitx, unity, 0, enn.x, enn.y, enn.get_binary_hp(), self.scenario_players[0])
+            print(result)
             self.reset()
+            return
         elif not self.player2.units:  # if enn died
             if illegal_move:
                 reward = -1
             else:
                 reward = 1
-            vsai.get_reward(reward, unit.x, unit.y, enn_x, enn_y)
+            self.skynet.get_reward(reward, unit.x, unit.y, unit.get_binary_hp(), enn_x, enn_y, 0, self.scenario_players[0])
             print("Success!")
             print(result)
             print("At turn: " + str(self.turn_counter))
-            print("Iteration: " + str(self.iteration))
             self.reset()
-
+            return
+        if illegal_move:
+            reward = -1
         else:
-            if illegal_move:
-                reward = -1
-            else:
-                reward = 0
-            enn = self.player2.units[0]
-            vsai.get_reward(reward, unit.x, unit.y, enn.x, enn.y)
-        self.new_turn()
+            reward = 0
+        self.skynet.get_reward(reward, unit.x, unit.y, unit.get_binary_hp(), enn.x, enn.y, enn.get_binary_hp(), self.scenario_players[0])
+
+        if self.scenario_counter == MAX_SCENARIO_TURN:
+            print("Ended on scenario turn " + str(MAX_SCENARIO_TURN))
+            self.reset()
+            return
 
     def ask_interpret_skynet_vs_skynet(self):
         player = self.players[self.turn]
@@ -1244,7 +1258,7 @@ class Game:
                     if not player.units:
                         self.erase_highlights()
                         skynet.get_reward(-1, unitx, unity, 0, ennx, enny, enn.get_binary_hp(), self.scenario_players[self.turn])
-                        other_skynet.get_reward(1, ennx, enny, enn.get_binary_hp(), unitx, unity, 0, self.scenario_players[self.turn])
+                        other_skynet.get_reward(1, ennx, enny, enn.get_binary_hp(), unitx, unity, 0, self.scenario_players[(self.turn+1) % NB_PLAYER])
                         print("Skynet" + str(self.turn+1) + " attacked and was destroyed")
                         print("Reset on scenario turn " + str(self.scenario_counter))
                         self.reset()
@@ -1252,7 +1266,7 @@ class Game:
                     elif not other_player.units:
                         self.erase_highlights()
                         skynet.get_reward(1, unitx, unity, unit.get_binary_hp(), ennx, enny, 0, self.scenario_players[self.turn])
-                        other_skynet.get_reward(-1, ennx, enny, 0, unitx, unity, unit.get_binary_hp(), self.scenario_players[self.turn])
+                        other_skynet.get_reward(-1, ennx, enny, 0, unitx, unity, unit.get_binary_hp(), self.scenario_players[(self.turn+1) % NB_PLAYER])
                         print("Skynet" + str(self.turn+1) + " attacked and destroyed the enemy")
                         print("Ended on scenario turn " + str(self.scenario_counter))
                         self.reset()
@@ -1270,17 +1284,14 @@ class Game:
         else:
             other_skynet.en_pos_x = unit.x
             other_skynet.en_pos_y = unit.y
-        if illegal_move:
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            self.next_reward = -1
-        else:
-            self.next_reward = 0
-
         if self.scenario_counter == MAX_SCENARIO_TURN:
             print("Ended on scenario turn " + str(MAX_SCENARIO_TURN))
             self.reset()
             return
-
+        if illegal_move:
+            self.next_reward = -1
+        else:
+            self.next_reward = 0
 
     def ask_interpret_skynet(self):
         player = self.players[self.turn]
