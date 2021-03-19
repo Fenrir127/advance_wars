@@ -211,9 +211,6 @@ def update_rewards(reward, scenario):
 
 
 def graph_by_scenario():
-    print(f"Scenario 0: {Skynet.rewards[0]}")
-    print(f"Scenario 1: {Skynet.rewards[1]}")
-    print(f"Scenario 2: {Skynet.rewards[2]}")
     plt.clf()
     for index, scn_rewards in enumerate(Skynet.rewards):
         moving_avg = np.convolve(scn_rewards, np.ones((SCN_SHOW_EVERY, )) / SCN_SHOW_EVERY, mode='valid')

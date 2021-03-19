@@ -229,8 +229,9 @@ class Game:
             enx, eny = self.get_random_pos(x, y)
             self.map.reset(x, y, enx, eny)
             self.scenario_player_1, self.scenario_player_2, lhp, rhp = self.get_random_scenario()
-            print("Scenario is " + self.scenarios[self.scenario_player_1])
-            self.end_turn_btn.text = str(self.scenarios[self.scenario_player_1])
+            self.scenario_players = [self.scenario_player_1, self.scenario_player_2]
+            print("Scenario is " + self.scenarios[self.scenario_players[0]])
+            self.end_turn_btn.text = str(self.scenarios[self.scenario_players[1]])
 
             self.scenario_counter = 0
             if not lhp:
@@ -1241,16 +1242,16 @@ class Game:
                     illegal_move = False
                     if not player.units:
                         self.erase_highlights()
-                        skynet.get_reward(-1, unitx, unity, 0, ennx, enny, enn.get_binary_hp(), self.scenario_player_1)  # TODO: changer scenario pour avoir le bon AI avec le bon scenario
-                        other_skynet.get_reward(1, ennx, enny, enn.get_binary_hp(), unitx, unity, 0, self.scenario_player_2)
+                        skynet.get_reward(-1, unitx, unity, 0, ennx, enny, enn.get_binary_hp(), self.scenario_players[self.turn])
+                        other_skynet.get_reward(1, ennx, enny, enn.get_binary_hp(), unitx, unity, 0, self.scenario_players[self.turn])
                         print("Skynet" + str(self.turn+1) + " attacked and was destroyed")
                         print("Reset on scenario turn " + str(self.scenario_counter))
                         self.reset()
                         return
                     elif not other_player.units:
                         self.erase_highlights()
-                        skynet.get_reward(1, unitx, unity, unit.get_binary_hp(), ennx, enny, 0, self.scenario_player_1)
-                        other_skynet.get_reward(-1, ennx, enny, 0, unitx, unity, unit.get_binary_hp(), self.scenario_player_2)
+                        skynet.get_reward(1, unitx, unity, unit.get_binary_hp(), ennx, enny, 0, self.scenario_players[self.turn])
+                        other_skynet.get_reward(-1, ennx, enny, 0, unitx, unity, unit.get_binary_hp(), self.scenario_players[self.turn])
                         print("Skynet" + str(self.turn+1) + " attacked and destroyed the enemy")
                         print("Ended on scenario turn " + str(self.scenario_counter))
                         self.reset()

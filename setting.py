@@ -58,7 +58,7 @@ if GAMEMODE == SKYNET_VS_SKYNET:
     WAIT_TIME = 0.1
     NO_DRAW = False
     STOP_DRAW_AT = 50
-    DRAW_EVERY = 100
+    DRAW_EVERY = 10000
     NB_PLAYER = 2
     AI_TO_LOAD = None
 
