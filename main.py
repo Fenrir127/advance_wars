@@ -223,6 +223,7 @@ class Game:
             enx, eny = self.get_random_pos(x, y)
             vsai.set_pos(x, y, enx, eny)
             self.map.reset(x, y, enx, eny)
+
         if GAMEMODE == SKYNET_VS_SKYNET:
             self.next_reward = None
             x, y = self.get_random_pos()
@@ -1266,14 +1267,20 @@ class Game:
         self.scenario_counter += 1
         if self.next_reward is not None:
             other_skynet.get_reward(self.next_reward, enn.x, enn.y, enn.get_binary_hp(), unit.x, unit.y, unit.get_binary_hp(), self.scenario_player_1)
+        else:
+            other_skynet.en_pos_x = unit.x
+            other_skynet.en_pos_y = unit.y
+        if illegal_move:
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            self.next_reward = -1
+        else:
+            self.next_reward = 0
+
         if self.scenario_counter == MAX_SCENARIO_TURN:
             print("Ended on scenario turn " + str(MAX_SCENARIO_TURN))
             self.reset()
             return
-        if illegal_move:
-            self.next_reward = -1
-        else:
-            self.next_reward = 0
+
 
     def ask_interpret_skynet(self):
         player = self.players[self.turn]
