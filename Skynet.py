@@ -1,3 +1,5 @@
+import pickle
+
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
@@ -228,6 +230,7 @@ class Skynet:
     epsilon = 1
     rewards = [[], [], []]
     rewards_tmp = [[], [], []]
+    version = 0
 
     def __init__(self, x, y, hp, en_x, en_y, en_hp):
         # Skynet.rewards = [[], [], []]
@@ -246,6 +249,7 @@ class Skynet:
         self.q_table = np.random.uniform(low=-1, high=1, size=([1, 1, 1, 1, 1, 1] + [1]))  # Just to initialize
         self.mvt_cost_map = init_map()
         self.legal_move = []  # This will be used during get_action, format: (mvt_x, mvt_y, atk_x, atk_y)
+
 
     def set_q_table(self, q_table):
         self.q_table = copy.copy(q_table)  # Copy by reference
@@ -312,6 +316,10 @@ class Skynet:
             Skynet.epsilon = 0.25
         elif Skynet.iteration == 40 * SHOW_EVERY:
             Skynet.epsilon = 0
+        elif Skynet.iteration == 50 * SHOW_EVERY:
+            f = open(f'skynet_q_table_aggresive_ai.pickle', 'wb')
+            f.write(pickle.dumps(self.q_table))
+            f.close()
 
         Skynet.iteration += 1
 

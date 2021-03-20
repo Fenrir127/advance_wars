@@ -1280,7 +1280,7 @@ class Game:
         self.draw()
         self.scenario_counter += 1
         if self.next_reward is not None:
-            other_skynet.get_reward(self.next_reward, enn.x, enn.y, enn.get_binary_hp(), unit.x, unit.y, unit.get_binary_hp(), self.scenario_player_1)
+            other_skynet.get_reward(self.next_reward, enn.x, enn.y, enn.get_binary_hp(), unit.x, unit.y, unit.get_binary_hp(), self.scenario_players[(self.turn+1) % NB_PLAYER])
         else:
             other_skynet.en_pos_x = unit.x
             other_skynet.en_pos_y = unit.y
