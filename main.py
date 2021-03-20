@@ -354,9 +354,17 @@ class Game:
                                         return
                                     else:
                                         self.ask_interpret_skynet()
-                                        if not self.player1.units or not self.player2.units:
+                                        self.scenario_counter += 1
+                                        self.draw()
+                                        if self.scenario_counter == MAX_SCENARIO_TURN:
+                                            print("Ended on scenario turn " + str(MAX_SCENARIO_TURN))
                                             self.reset()
                                             return
+                                        elif not self.player1.units or not self.player2.units:
+                                            self.reset()
+                                            return
+                                        else:
+                                            self.new_turn()
                     else:
                         self.tile_selected(x, y)  # Function takes care of actions when selecting a tile
         else:
@@ -1314,14 +1322,10 @@ class Game:
                     self.map.move_unit(unit.x, unit.y, unit.x - mvt[0], unit.y - mvt[1])
         else:
             print("illegal move given")
-        self.skynet.set_param(unit.x, unit.y, unit.get_binary_hp(), enn.x, enn.y, enn.get_binary_hp())
         self.erase_highlights()
-        self.scenario_counter += 1
-        if self.scenario_counter == MAX_SCENARIO_TURN:
-            print("Ended on scenario turn " + str(MAX_SCENARIO_TURN))
-            self.reset()
-        else:
-            self.new_turn()
+        if self.player1.units and self.player2.units:
+            self.skynet.set_param(unit.x, unit.y, unit.get_binary_hp(), enn.x, enn.y, enn.get_binary_hp())
+
 
     def get_random_pos(self, nx=None, ny=None):
         if nx and ny is None:
