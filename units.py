@@ -47,6 +47,8 @@ class Unit:
     def new_turn(self):
         if self.embarked:
             return
+        if self.available:
+            self.available.kill()
         self.available = Available(self.game, self.x, self.y)
 
     def die(self):

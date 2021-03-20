@@ -190,6 +190,8 @@ class Game:
             self.skynet = Skynet.Skynet(1, 1, 1, 1, 1, 1)
             self.q_table = np.random.uniform(low=-1, high=1, size=([7, 7, 2, 7, 7, 2] + [125]))
             self.skynet.set_q_table(self.q_table)
+            self.reset()
+            self.new_turn()
         # Hard coded, player 1 always start the game
         for unit in self.player1.units:
             unit.new_turn()
@@ -264,13 +266,13 @@ class Game:
             enx, eny = self.get_random_pos(x, y)
             self.map.reset(x, y, enx, eny)
             self.scenario_player_1, self.scenario_player_2, lhp, rhp = self.get_random_scenario()
-            print("Scenario is " + self.scenarios[self.scenario_player_1] + " from Skynet's point of view")
+            print("Scenario is " + self.scenarios[self.scenario_player_2] + " from Skynet's point of view")
             self.scenario_counter = 0
             if not lhp:
                 self.player1.units[0].hp = 20
             if not rhp:
                 self.player2.units[0].hp = 20
-            self.skynet.set_param(x, y, lhp, enx, eny, rhp)
+            self.skynet.set_param(enx, eny, rhp, x, y, lhp)
             self.new_turn()
 
     def quit(self):
@@ -1280,7 +1282,7 @@ class Game:
         self.draw()
         self.scenario_counter += 1
         if self.next_reward is not None:
-            other_skynet.get_reward(self.next_reward, enn.x, enn.y, enn.get_binary_hp(), unit.x, unit.y, unit.get_binary_hp(), self.scenario_players[(self.turn+1) % NB_PLAYER])
+            other_skynet.get_reward(self.next_reward, enn.x, enn.y, enn.get_binary_hp(), unit.x, unit.y, unit.get_binary_hp(), self.scenario_player_1)
         else:
             other_skynet.en_pos_x = unit.x
             other_skynet.en_pos_y = unit.y
@@ -1295,6 +1297,7 @@ class Game:
 
     def ask_interpret_skynet(self):
         player = self.players[self.turn]
+        enn = self.players[(self.turn+1)% NB_PLAYER].units[0]
         unit = player.units[0]
         action = self.skynet.get_action()
         mvt = action[0]
@@ -1307,7 +1310,11 @@ class Game:
                 if self.map.is_atk_highlight(unit.x + attack[0], unit.y + attack[1]):
                     self.atk_target(unit.x, unit.y, unit.x + attack[0], unit.y + attack[1])
                 else:
+                    print("illegal move given")
                     self.map.move_unit(unit.x, unit.y, unit.x - mvt[0], unit.y - mvt[1])
+        else:
+            print("illegal move given")
+        self.skynet.set_param(unit.x, unit.y, unit.get_binary_hp(), enn.x, enn.y, enn.get_binary_hp())
         self.erase_highlights()
         self.scenario_counter += 1
         if self.scenario_counter == MAX_SCENARIO_TURN:
