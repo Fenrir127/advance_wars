@@ -28,7 +28,9 @@ SMALL = 0
 NORMAL = 1
 
 MAPSIZE = SMALL
-GAMEMODE = SKYNET_VS_AI
+GAMEMODE = SKYNET_VS_SKYNET
+LEARNING = 1  # 1: start a q_table from scratch; 0: load a q_table
+Q_TABLE_NAME = 'skynet_q_table_self_v1_0.pickle'
 
 if MAPSIZE == NORMAL:
     GRID_X_SIZE = 32

@@ -4,7 +4,7 @@ import numpy as np
 import copy
 import matplotlib.pyplot as plt
 from matplotlib import style
-from setting import GRID_X_SIZE, GRID_Y_SIZE, MAP_TO_LOAD
+from setting import GRID_X_SIZE, GRID_Y_SIZE, MAP_TO_LOAD, LEARNING, Q_TABLE_NAME
 from os import path
 
 style.use("ggplot")
@@ -204,18 +204,10 @@ def graph():
     plt.pause(0.1)
 
 
-def update_rewards(reward, scenario):
-    Skynet.rewards_tmp[scenario].append(reward)
-    if len(Skynet.rewards_tmp[scenario]) == AVG_EVERY:
-        Skynet.rewards[scenario].append(
-            sum(Skynet.rewards_tmp[scenario]) / len(Skynet.rewards_tmp[scenario]))  # averages it to save memory
-        Skynet.rewards_tmp[scenario] = []
-
-
 def graph_by_scenario():
     plt.clf()
     for index, scn_rewards in enumerate(Skynet.rewards):
-        moving_avg = np.convolve(scn_rewards, np.ones((SCN_SHOW_EVERY, )) / SCN_SHOW_EVERY, mode='valid')
+        moving_avg = np.convolve(scn_rewards, np.ones((SCN_SHOW_EVERY,)) / SCN_SHOW_EVERY, mode='valid')
         plt.plot([i * AVG_EVERY for i in range(len(moving_avg))], moving_avg, label=f'Scenario {index}')
     plt.title(f"LR={LEARNING_RATE} ; D={DISCOUNT}")
     plt.ylabel(f"Reward {SCN_SHOW_EVERY}ma")
@@ -250,9 +242,17 @@ class Skynet:
         self.mvt_cost_map = init_map()
         self.legal_move = []  # This will be used during get_action, format: (mvt_x, mvt_y, atk_x, atk_y)
 
-
     def set_q_table(self, q_table):
-        self.q_table = copy.copy(q_table)  # Copy by reference
+        if LEARNING == 1:  # Learn from scratch
+            self.q_table = copy.copy(q_table)  # Copy by reference for Skynet vs Skynet
+        else:  # We want to exploit
+            try:
+                f = open(Q_TABLE_NAME, 'rb')
+                self.q_table = pickle.loads(f.read())
+                Skynet.epsilon = 0  # we want to exploit, not to relearn
+            except:
+                print("Q table does not exist.")
+                exit()
 
     def get_action(self):
         self.legal_move = []  # Reset the table
@@ -260,7 +260,7 @@ class Skynet:
         self.get_legal_move(self.skynet_mvt, self.skynet_pos_x, self.skynet_pos_y, self.en_pos_x, self.en_pos_y)
 
         if np.random.random() > Skynet.epsilon:  # Maximum value
-            max_value = -2   # Will be overwritten
+            max_value = -2  # Will be overwritten
             max_action = -1  # Will be overwritten
             for move in self.legal_move:
                 pos_x, pos_y, atk_x, atk_y = move
@@ -281,47 +281,21 @@ class Skynet:
         return ACTION_TABLE[self.action]
 
     def get_reward(self, reward, new_skynet_x, new_skynet_y, new_skynet_hp, en_new_x, en_new_y, en_new_hp, scenario):
-        update_rewards(reward, scenario)
         max_future_q = np.max(self.q_table[new_skynet_x, new_skynet_y, new_skynet_hp, en_new_x, en_new_y, en_new_hp])
-        # maximum possible value for the next situation
+        # maximum possible value for the next state
         current_q = self.q_table[self.skynet_pos_x, self.skynet_pos_y, self.skynet_hp, self.en_pos_x, self.en_pos_y,
                                  self.en_hp, self.action]
-        # current state that we need to modify because an action was taken
+        # current q_value that we need to modify because an action was taken
         new_q = (1 - LEARNING_RATE) * current_q + LEARNING_RATE * (reward + DISCOUNT * max_future_q)
         # we find the new q_value of the current state and action according to the max possible value of the next state
         self.q_table[
             self.skynet_pos_x, self.skynet_pos_y, self.skynet_hp, self.en_pos_x, self.en_pos_y, self.en_hp, self.action] = new_q
-        self.skynet_pos_x = new_skynet_x
-        self.skynet_pos_y = new_skynet_y
-        self.skynet_hp = new_skynet_hp
-        self.en_pos_x = en_new_x
-        self.en_pos_y = en_new_y
-        self.en_hp = en_new_hp
-
         # we update the current q_table's q_value to represent the possibilities of this action
 
-        episode_rewards.append(reward)
-        if Skynet.iteration % 1000 == 0:
-            print("----------------------------")
-            print(f'AI iterations: {Skynet.iteration}')
-            print(f'Epsilon: {Skynet.epsilon}')
-            print("----------------------------")
-        if Skynet.iteration % SHOW_EVERY == 0 and Skynet.iteration != 0:
-            graph_by_scenario()
-        if Skynet.iteration == 10 * SHOW_EVERY:
-            Skynet.epsilon = 0.75
-        elif Skynet.iteration == 20 * SHOW_EVERY:
-            Skynet.epsilon = 0.5
-        elif Skynet.iteration == 30 * SHOW_EVERY:
-            Skynet.epsilon = 0.25
-        elif Skynet.iteration == 40 * SHOW_EVERY:
-            Skynet.epsilon = 0
-        elif Skynet.iteration == 50 * SHOW_EVERY:
-            f = open(f'skynet_q_table_aggresive_ai.pickle', 'wb')
-            f.write(pickle.dumps(self.q_table))
-            f.close()
+        self.set_param(new_skynet_x, new_skynet_y, new_skynet_hp, en_new_x, en_new_y, en_new_hp)
 
-        Skynet.iteration += 1
+        if LEARNING == 1:  # Need to show graph
+            self.update_rewards(reward, scenario)
 
     def get_legal_move(self, mvt, x, y, enx, eny, direction="None"):
         if mvt < 0 or x < 0 or x > GRID_X_SIZE - 1 or y < 0 or y > GRID_Y_SIZE - 1:  # If tile is out of grid
@@ -329,8 +303,8 @@ class Skynet:
         if x == enx and y == eny:  # if on enemy tile
             return
         if abs(enx - x) + abs(eny - y) == self.skynet_range:  # enemy is one tile away
-            if (x - self.skynet_pos_x, y - self.skynet_pos_y, enx-x, eny-y) not in self.legal_move:
-                self.legal_move.append((x - self.skynet_pos_x, y - self.skynet_pos_y, enx-x, eny-y))
+            if (x - self.skynet_pos_x, y - self.skynet_pos_y, enx - x, eny - y) not in self.legal_move:
+                self.legal_move.append((x - self.skynet_pos_x, y - self.skynet_pos_y, enx - x, eny - y))
         if (x - self.skynet_pos_x, y - self.skynet_pos_y, 0, 0) not in self.legal_move:
             self.legal_move.append((x - self.skynet_pos_x, y - self.skynet_pos_y, 0, 0))
 
@@ -358,3 +332,34 @@ class Skynet:
         self.en_pos_x = en_x
         self.en_pos_y = en_y
         self.en_hp = en_hp
+
+    def update_rewards(self, reward, scenario):
+        episode_rewards.append(reward)
+        if Skynet.iteration % 1000 == 0:
+            print("----------------------------")
+            print(f'AI iterations: {Skynet.iteration}')
+            print(f'Epsilon: {Skynet.epsilon}')
+            print("----------------------------")
+        if Skynet.iteration % SHOW_EVERY == 0 and Skynet.iteration != 0:
+            graph_by_scenario()
+        if Skynet.iteration == 10 * SHOW_EVERY:
+            Skynet.epsilon = 0.75
+        elif Skynet.iteration == 20 * SHOW_EVERY:
+            Skynet.epsilon = 0.5
+        elif Skynet.iteration == 30 * SHOW_EVERY:
+            Skynet.epsilon = 0.25
+        elif Skynet.iteration == 40 * SHOW_EVERY:
+            Skynet.epsilon = 0
+        elif Skynet.iteration == 50 * SHOW_EVERY:
+            f = open(Q_TABLE_NAME, 'wb')
+            f.write(pickle.dumps(self.q_table))
+            f.close()
+            print("Learning finished.")
+            exit()
+
+        Skynet.iteration += 1
+        Skynet.rewards_tmp[scenario].append(reward)
+        if len(Skynet.rewards_tmp[scenario]) == AVG_EVERY:
+            Skynet.rewards[scenario].append(
+                sum(Skynet.rewards_tmp[scenario]) / len(Skynet.rewards_tmp[scenario]))  # averages it to save memory
+            Skynet.rewards_tmp[scenario] = []
