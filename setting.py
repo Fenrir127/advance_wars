@@ -28,7 +28,9 @@ SMALL = 0
 NORMAL = 1
 
 MAPSIZE = SMALL
-GAMEMODE = SKYNET_VS_P
+GAMEMODE = SKYNET_VS_SKYNET
+LEARNING = 1  # 1: start a q_table from scratch; 0: load a q_table
+Q_TABLE_NAME = 'skynet_q_table_self_v1_1.pickle'
 
 if MAPSIZE == NORMAL:
     GRID_X_SIZE = 32
@@ -45,10 +47,10 @@ elif MAPSIZE == SMALL:
 
 if GAMEMODE == SKYNET_VS_AI:
     # TODO Change NO_DRAW if you want to see the AI move or not
-    WAIT_TIME = 0.3
+    WAIT_TIME = 0.1
     NO_DRAW = False
     STOP_DRAW_AT = 50
-    DRAW_EVERY = 1
+    DRAW_EVERY = 10000
     NB_PLAYER = 2
     AI_TO_LOAD = AGRESSIVE
 
@@ -74,8 +76,8 @@ if GAMEMODE == SKYNET_VS_P:
 
 
 TILESIZE = 32
-SCREEN_WIDTH = 960
-SCREEN_HEIGHT = 512
+SCREEN_WIDTH = 1504
+SCREEN_HEIGHT = 768
 
 GRID_WIDTH = GRID_X_SIZE * TILESIZE
 GRID_HEIGHT = GRID_Y_SIZE * TILESIZE

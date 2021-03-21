@@ -9,7 +9,7 @@ from os import path
 
 style.use("ggplot")
 
-LEARNING_RATE = 0.3
+LEARNING_RATE = 0.7
 DISCOUNT = 0.95
 AVG_EVERY = 20
 SCN_SHOW_EVERY = 1000
@@ -186,7 +186,7 @@ def init_map():
         for line in f1:
             map_init.append(line.strip())
 
-    converter = {'w': 1, 'r': 2, 'p': 1, 'm': 2, 'd': 1}
+    converter = {'w': 1, 'r': 2, 'p': 1, 'm': 2, 'd': 1, 's': 10}
     mvt_cost_map = [[0 for x in range(GRID_X_SIZE)] for y in range(GRID_Y_SIZE)]
     # This converts every tile to a mvmt cost
     for x in range(GRID_X_SIZE):
@@ -222,12 +222,10 @@ class Skynet:
     epsilon = 1
     rewards = [[], [], []]
     rewards_tmp = [[], [], []]
+    scenario_rewards = [[0, 0], [0, 0], [0, 0]]  # Win / lose
     version = 0
 
     def __init__(self, x, y, hp, en_x, en_y, en_hp):
-        # Skynet.rewards = [[], [], []]
-        # Skynet.rewards_tmp = [[], [], []]
-        # Skynet.epsilon = 1
         self.action = 0
         self.skynet_mvt = 3  # Infantry
         self.skynet_range = 1  # Infantry
@@ -237,7 +235,6 @@ class Skynet:
         self.en_pos_x = en_x
         self.en_pos_y = en_y
         self.en_hp = en_hp
-        # Skynet.iteration = 0
         self.q_table = np.random.uniform(low=-1, high=1, size=([1, 1, 1, 1, 1, 1] + [1]))  # Just to initialize
         self.mvt_cost_map = init_map()
         self.legal_move = []  # This will be used during get_action, format: (mvt_x, mvt_y, atk_x, atk_y)
@@ -296,6 +293,30 @@ class Skynet:
 
         if LEARNING == 1:  # Need to show graph
             self.update_rewards(reward, scenario)
+        else:
+            Skynet.iteration += 1
+            if reward == 1:
+                Skynet.scenario_rewards[scenario][0] += 1
+            elif reward == -1:
+                Skynet.scenario_rewards[scenario][1] += 1
+            if Skynet.iteration == 1000:
+                print("Result of Skynet vs aggressive AI")
+                print("---------------------------------------------------")
+                i = 0
+                for scenario in Skynet.scenario_rewards:
+                    print(scenario)
+                    print(f"SCENARIO {i}")
+                    if scenario[1] == 0:
+                        print("100%")
+                    elif scenario[0] == 0:
+                        print("0%")
+                    else:
+                        print(f'{100 * scenario[0] / (scenario[0] + scenario[1])}%')
+                    i += 1
+                exit()
+
+    def set_win(self):
+        self.q_table[self.skynet_pos_x, self.skynet_pos_y, self.skynet_hp, self.en_pos_x, self.en_pos_y, self.en_hp, self.action] = 0
 
     def get_legal_move(self, mvt, x, y, enx, eny, direction="None"):
         if mvt < 0 or x < 0 or x > GRID_X_SIZE - 1 or y < 0 or y > GRID_Y_SIZE - 1:  # If tile is out of grid

@@ -11,7 +11,7 @@ with open(path.join(path.dirname(__file__), MAP_TO_LOAD), 'rt') as f1:
     for line in f1:
         map_init.append(line.strip())
 
-converter = {'w': 1, 'r': 2, 'p': 1, 'm': 2, 'd': 1}
+converter = {'w': 1, 'r': 2, 'p': 1, 'm': 2, 'd': 1, 's': 10}
 
 mvt_cost_map = [[0 for x in range(GRID_X_SIZE)] for y in range(GRID_Y_SIZE)]
 for x in range(GRID_X_SIZE):
