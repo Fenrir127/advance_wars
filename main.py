@@ -37,22 +37,35 @@ class Game:
         # initialize all variables and do all the setup for a new game
         # This is where we initialize the buttons and the text boxes
         self.textboxes = []
-        self.unit_text = Textbox(self.screen, 1024, 0, 240, 256)
+        self.unit_text = Textbox(self.screen, SCREEN_WIDTH-480, 0, 240, 256)
         self.textboxes.append(self.unit_text)
-        self.terrain_text = Textbox(self.screen, 1264, 0, 240, 256)
+        self.terrain_text = Textbox(self.screen, SCREEN_WIDTH-240, 0, 240, 256)
         self.textboxes.append(self.terrain_text)
-        self.preview_text = Textbox(self.screen, 1024, 256, 480, 256)
-        self.textboxes.append(self.preview_text)
+        if SCREEN_HEIGHT > 512:
+            self.preview_text = Textbox(self.screen, SCREEN_WIDTH - 480, 256, 480, 256)
+            self.textboxes.append(self.preview_text)
+            self.cancel_btn = Button(self.screen, WHITE, SCREEN_WIDTH - 240, 640, 240, 128, "Cancel")
+            if GAMEMODE == SKYNET_VS_SKYNET or GAMEMODE == SKYNET_VS_AI:
+                self.end_turn_btn = Button(self.screen, WHITE, TILESIZE * GRID_X_SIZE + 20, 0, 240, 128, "End Turn")
+            else:
+                self.end_turn_btn = Button(self.screen, WHITE, SCREEN_WIDTH - 480, 640, 240, 128, "End Turn")
+            self.special_btn = Button(self.screen, WHITE, SCREEN_WIDTH - 240, 512, 240, 128, "Cptr/Rfl/Mrg")
+            self.attack_btn = Button(self.screen, WHITE, SCREEN_WIDTH - 480, 512, 240, 128, "Attack")
+        else:
+            self.preview_text = Textbox(self.screen, 0, 256, 480, 256)
+            self.textboxes.append(self.preview_text)
+            self.cancel_btn = Button(self.screen, WHITE, SCREEN_WIDTH - 240, 384, 240, 128, "Cancel")
+            if GAMEMODE == SKYNET_VS_SKYNET or GAMEMODE == SKYNET_VS_AI:
+                self.end_turn_btn = Button(self.screen, WHITE, TILESIZE * GRID_X_SIZE + 20, 0, 240, 128, "End Turn")
+            else:
+                self.end_turn_btn = Button(self.screen, WHITE, SCREEN_WIDTH - 480, 384, 240, 128, "End Turn")
+            self.special_btn = Button(self.screen, WHITE, SCREEN_WIDTH - 240, 256, 240, 128, "Cptr/Rfl/Mrg")
+            self.attack_btn = Button(self.screen, WHITE, SCREEN_WIDTH - 480, 256, 240, 128, "Attack")
+
 
         # This is where we create the buttons
         self.buttons_list = []
-        self.cancel_btn = Button(self.screen, WHITE, 1264, 640, 240, 128, "Cancel")
-        if GAMEMODE == SKYNET_VS_SKYNET or GAMEMODE == SKYNET_VS_AI:
-            self.end_turn_btn = Button(self.screen, WHITE, TILESIZE * GRID_X_SIZE + 20, 0, 240, 128, "End Turn")
-        else:
-            self.end_turn_btn = Button(self.screen, WHITE, 1024, 640, 240, 128, "End Turn")
-        self.special_btn = Button(self.screen, WHITE, 1264, 512, 240, 128, "Cptr/Rfl/Mrg")
-        self.attack_btn = Button(self.screen, WHITE, 1024, 512, 240, 128, "Attack")
+
         self.buttons_list.append(self.cancel_btn)
         self.buttons_list.append(self.end_turn_btn)
         self.buttons_list.append(self.special_btn)
@@ -1310,6 +1323,7 @@ class Game:
         action = self.skynet.get_action()
         mvt = action[0]
         attack = action[1]
+        self.skynet.set_param(unit.x, unit.y, unit.get_binary_hp(), enn.x, enn.y, enn.get_binary_hp())
         self.highlight(unit.mvt_type, unit.movement, unit.fuel, unit.x, unit.y)
         if self.map.is_highlight(unit.x + mvt[0], unit.y + mvt[1]):
             self.map.move_unit(unit.x, unit.y, unit.x + mvt[0], unit.y + mvt[1])
