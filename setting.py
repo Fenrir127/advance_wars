@@ -24,13 +24,23 @@ SKYNET_VS_SKYNET = 3
 # Static AIs
 AGRESSIVE = 0
 
+# Scenarios
+RUNAWAY = 0
+ATTACK = 1
+STALEMATE = 2
+
+# Map Sizes
 SMALL = 0
 NORMAL = 1
 
 MAPSIZE = SMALL
-GAMEMODE = SKYNET_VS_SKYNET
-LEARNING = 1  # 1: start a q_table from scratch; 0: load a q_table
-Q_TABLE_NAME = 'skynet_q_table_self_v1_1.pickle'
+GAMEMODE = SKYNET_VS_AI
+SCENARIO = RUNAWAY
+
+LEARNING_SK1 = 1  # 1: start a q_table from scratch; 0: load a q_table
+Q_TABLE_NAME_SK1 = 'skynet_q_table_runaway.pickle'
+LEARNING_SK2 = 0
+Q_TABLE_NAME_SK2 = 'skynet_q_table_aggressive_ai_v1_0.pickle'
 
 if MAPSIZE == NORMAL:
     GRID_X_SIZE = 32
@@ -47,12 +57,18 @@ elif MAPSIZE == SMALL:
 
 if GAMEMODE == SKYNET_VS_AI:
     # TODO Change NO_DRAW if you want to see the AI move or not
-    WAIT_TIME = 0.1
+    WAIT_TIME = 0.5
     NO_DRAW = False
     STOP_DRAW_AT = 50
-    DRAW_EVERY = 10000
+    DRAW_EVERY = 1
     NB_PLAYER = 2
-    AI_TO_LOAD = AGRESSIVE
+    if SCENARIO == RUNAWAY:
+        MAP_TO_LOAD = 'scenario_runaway.txt'
+    elif SCENARIO == ATTACK:
+        MAP_TO_LOAD = 'scenario_attack.txt'
+    else:
+        MAP_TO_LOAD = 'scenario_stalemate.txt'
+
 
 if GAMEMODE == SKYNET_VS_SKYNET:
     # TODO Change NO_DRAW if you want to see the AI move or not
@@ -76,8 +92,8 @@ if GAMEMODE == SKYNET_VS_P:
 
 
 TILESIZE = 32
-SCREEN_WIDTH = 1504
-SCREEN_HEIGHT = 768
+SCREEN_WIDTH = 960
+SCREEN_HEIGHT = 512
 
 GRID_WIDTH = GRID_X_SIZE * TILESIZE
 GRID_HEIGHT = GRID_Y_SIZE * TILESIZE
