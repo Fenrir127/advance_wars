@@ -28,9 +28,11 @@ SMALL = 0
 NORMAL = 1
 
 MAPSIZE = SMALL
-GAMEMODE = SKYNET_VS_SKYNET
-LEARNING = 1  # 1: start a q_table from scratch; 0: load a q_table
-Q_TABLE_NAME = 'skynet_q_table_self_v1_1.pickle'
+GAMEMODE = SKYNET_VS_AI
+LEARNING_SK1 = 0  # 1: start a q_table from scratch; 0: load a q_table
+Q_TABLE_NAME_SK1 = 'skynet_q_table_aggressive_ai_v3_0.pickle'
+LEARNING_SK2 = 0
+Q_TABLE_NAME_SK2 = 'skynet_q_table_aggressive_ai_v1_0.pickle'
 
 if MAPSIZE == NORMAL:
     GRID_X_SIZE = 32
@@ -47,10 +49,10 @@ elif MAPSIZE == SMALL:
 
 if GAMEMODE == SKYNET_VS_AI:
     # TODO Change NO_DRAW if you want to see the AI move or not
-    WAIT_TIME = 0.1
+    WAIT_TIME = 1
     NO_DRAW = False
     STOP_DRAW_AT = 50
-    DRAW_EVERY = 10000
+    DRAW_EVERY = 100000
     NB_PLAYER = 2
     AI_TO_LOAD = AGRESSIVE
 
