@@ -3,7 +3,7 @@ import numpy as np
 import copy
 import matplotlib.pyplot as plt
 from matplotlib import style
-from setting import GRID_X_SIZE, GRID_Y_SIZE, MAP_TO_LOAD, LEARNING_SK1, STARTING_TABLE, ITERATIVE_TRAINING
+from setting import GRID_X_SIZE, GRID_Y_SIZE, MAP_TO_LOAD, LEARNING_SK1, Q_TABLE_NAME_SK1, STARTING_TABLE, ITERATIVE_TRAINING
 from os import path
 
 style.use("ggplot")
@@ -372,7 +372,7 @@ class Skynet:
         elif self.iteration == 40 * SHOW_EVERY:
             self.epsilon = 0
         elif self.iteration == 50 * SHOW_EVERY:
-            f = open(STARTING_TABLE, 'wb')
+            f = open(Q_TABLE_NAME_SK1, 'wb')
             f.write(pickle.dumps(self.q_table))
             f.close()
             print("Learning finished.")
