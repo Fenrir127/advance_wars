@@ -27,7 +27,6 @@ def get_action(x, y, hp, enx, eny, enhp):
     best_moves = []
     final_moves = []
     if hp >= enhp:
-        print("Attacking")
         current_best_move_score = 999
         for move in legal_move:
             dx = enx - move[0]
@@ -49,7 +48,6 @@ def get_action(x, y, hp, enx, eny, enhp):
             dx = enx - current_best_move_xy[0]
             dy = eny - current_best_move_xy[1]
         else:  # Not in range, move as close as possible
-            print("Not in range getting closest move")
             best_moves.clear()
             for move in legal_move:
                 if ((move[0] == 1 or move[0] == 5) and 1 <= move[1] <= 5) or ((move[1] == 1 or move[1] == 5) and 1 <= move[0] <= 5):
@@ -60,18 +58,15 @@ def get_action(x, y, hp, enx, eny, enhp):
                 total_score = abs(dx) + abs(dy)
                 if total_score < current_best_move_score:
                     current_best_move_score = total_score
-            print(best_moves)
             for move in best_moves:
                 dx = enx - move[0]
                 dy = eny - move[1]
                 total_score = abs(dx) + abs(dy)
                 if total_score == current_best_move_score:
                     final_moves.append((move[0], move[1]))
-            print(final_moves)
             pick = random.randint(0, len(final_moves) - 1)
             current_best_move_xy = final_moves[pick]
-            if (enx < 2 or enx > 4) and y == 3:
-                print("Trying Obstacle avoidance")
+            if ((enx < 2 and x > 4) or (enx > 4 and x < 2)) and y == 3:
                 if eny < 3:
                     if current_best_move_xy[0] == 5:
                         current_best_move_xy = (5, 1)
@@ -82,7 +77,6 @@ def get_action(x, y, hp, enx, eny, enhp):
                         current_best_move_xy = (5, 5)
                     else:
                         current_best_move_xy = (1, 5)
-            print(current_best_move_xy)
             dx = 0
             dy = 0
 
@@ -109,7 +103,6 @@ def get_action(x, y, hp, enx, eny, enhp):
     legal_move.clear()
     best_moves.clear()
     final_moves.clear()
-    print(current_best_move_xy)
     return current_best_move_xy[0], current_best_move_xy[1], dx, dy
 
 def get_legal_move(mvt, x, y, enx, eny, direction="None"):
