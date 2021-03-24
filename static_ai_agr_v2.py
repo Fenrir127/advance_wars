@@ -26,6 +26,7 @@ def get_action(x, y, hp, enx, eny, enhp):
     global legal_move
     best_moves = []
     final_moves = []
+    second_final_moves = []
     if hp >= enhp:
         current_best_move_score = 999
         for move in legal_move:
@@ -59,15 +60,32 @@ def get_action(x, y, hp, enx, eny, enhp):
                 total_score = abs(dx) + abs(dy)
                 if total_score < current_best_move_score:
                     current_best_move_score = total_score
+
             for move in best_moves:
                 dx = enx - move[0]
                 dy = eny - move[1]
                 total_score = abs(dx) + abs(dy)
                 if total_score == current_best_move_score:
                     final_moves.append((move[0], move[1]))
-            pick = random.randint(0, len(final_moves) - 1) if len(final_moves) >= 2 else 0
+                elif total_score == current_best_move_score + 1:
+                    second_final_moves.append((move[0], move[1]))
+
+            if len(final_moves) == 1:
+                pick = 0
+            else:
+                pick = random.randint(0, len(final_moves) - 1)
             current_best_move_xy = final_moves[pick]
-            if ((enx < 2 and x > 4) or (enx > 4 and x < 2)) and y == 3 and ((enx != 1 or enx != 5) and (eny != 1 or eny != 5)):
+            dx = x - current_best_move_xy[0]
+            dy = y - current_best_move_xy[1]
+            mvt_used = abs(dx) + abs(dy)
+            if mvt_used < 3:
+                if len(second_final_moves) == 1:
+                    pick = 0
+                else:
+                    pick = random.randint(0, len(second_final_moves) - 1)
+                current_best_move_xy = second_final_moves[pick]
+
+            if ((enx < 2 and x > 4) or (enx > 4 and x < 2)) and y == 3:
                 if eny < 3:
                     if x > 3:
                         current_best_move_xy = (5, 1)
