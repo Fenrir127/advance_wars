@@ -14,8 +14,8 @@ import static_ai_agr_v2 as agr_ai
 import static_ai_run as run_ai
 
 
-
 # TODO Change the name of all the highlight function to make more sense and be more readable, even I get confused
+
 
 class Game:
     """Game has references to the Map and a list of all the sprites.
@@ -189,8 +189,8 @@ class Game:
         self.playing = True
         if GAMEMODE == SKYNET_VS_SKYNET:
             self.get_random_scenario()
-            self.skynet1 = Skynet.Skynet(1, 1, 1, 1, LEARNING_SK1, Q_TABLE_NAME_SK1)
-            self.skynet2 = Skynet.Skynet(1, 1, 1, 1, LEARNING_SK2, Q_TABLE_NAME_SK2)
+            self.skynet1 = Skynet.Skynet(1, 1, 1, 1, LEARNING_SK1)
+            self.skynet2 = Skynet.Skynet(1, 1, 1, 1, LEARNING_SK2)
             self.q_table = np.zeros([7, 7, 7, 7] + [125])
             self.skynet1.set_q_table(self.q_table)
             self.skynet2.set_q_table(self.q_table)
@@ -198,8 +198,12 @@ class Game:
             self.turn_counter += 1
         elif GAMEMODE == SKYNET_VS_AI:
             self.skynet = Skynet.Skynet(1, 1, 1, 1)
-            self.q_table = np.ones([7, 7, 7, 7] + [125])
-            self.q_table = np.negative(self.q_table)
+            if not START_FROM_NEW:  # We want to load a specific q_table to train
+                f = open(STARTING_TABLE, 'rb')
+                self.q_table = pickle.loads(f.read())
+            else:
+                self.q_table = np.ones([7, 7, 7, 7] + [125])
+                self.q_table = np.negative(self.q_table)
             self.skynet.set_q_table(self.q_table)
             self.turn_counter += 1
             if SCENARIO == RUNAWAY:
@@ -1409,6 +1413,7 @@ class Game:
         other_player = self.players[(self.turn + 1) % NB_PLAYER]
         unit = player.units[0]
         enn = other_player.units[0]
+        self.skynet.set_param(unit.x, unit.y, enn.x, enn.y)
         action = self.skynet.get_action()
         mvt = action[0]
         attack = action[1]
@@ -1548,10 +1553,10 @@ class Game:
         else:
             self.skynet.get_reward(reward, unit.x, unit.y, enn.x, enn.y, self.scenario_player_1)
 
-        # if self.scenario_counter == MAX_SCENARIO_TURN:
-        #     print("Ended on scenario turn " + str(MAX_SCENARIO_TURN))
-        #     self.reset()
-        #     return
+        if self.scenario_counter == MAX_SCENARIO_TURN:
+            print("Ended on scenario turn " + str(MAX_SCENARIO_TURN))
+            self.reset()
+            return
 
     def ask_interpret_skynet_vs_skynet(self):
         player = self.players[self.turn]

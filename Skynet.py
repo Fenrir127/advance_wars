@@ -1,15 +1,14 @@
-import os
 import pickle
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
 from matplotlib import style
-from setting import GRID_X_SIZE, GRID_Y_SIZE, MAP_TO_LOAD, LEARNING_SK1, Q_TABLE_NAME_SK1, ITERATIVE_TRAINING
+from setting import GRID_X_SIZE, GRID_Y_SIZE, MAP_TO_LOAD, LEARNING_SK1, STARTING_TABLE, ITERATIVE_TRAINING
 from os import path
 
 style.use("ggplot")
 
-LEARNING_RATE = 0.7
+LEARNING_RATE = 0.3
 DISCOUNT = 0.95
 AVG_EVERY = 20
 SCN_SHOW_EVERY = 1000
@@ -213,8 +212,9 @@ def graph():
 def graph_by_scenario():
     plt.clf()
     for index, scn_rewards in enumerate(Skynet.rewards):
-        moving_avg = np.convolve(scn_rewards, np.ones((SCN_SHOW_EVERY,)) / SCN_SHOW_EVERY, mode='valid')
-        plt.plot([i * AVG_EVERY for i in range(len(moving_avg))], moving_avg, label=f'Scenario {index}')
+        if scn_rewards:
+            moving_avg = np.convolve(scn_rewards, np.ones((SCN_SHOW_EVERY,)) / SCN_SHOW_EVERY, mode='valid')
+            plt.plot([i * AVG_EVERY for i in range(len(moving_avg))], moving_avg, label=f'Scenario {index}')
     plt.title(f"LR={LEARNING_RATE} ; D={DISCOUNT}")
     plt.ylabel(f"Reward {SCN_SHOW_EVERY}ma")
     plt.xlabel("iteration #")
@@ -229,9 +229,8 @@ class Skynet:
     scenario_rewards = [[0, 0], [0, 0], [0, 0]]  # Win / lose
     version = 0
 
-    def __init__(self, x, y, en_x, en_y, learning=LEARNING_SK1, q_table_name=Q_TABLE_NAME_SK1):
+    def __init__(self, x, y, en_x, en_y, learning=LEARNING_SK1):
         self.learning = learning
-        self.q_table_name = q_table_name
         self.epsilon = 1
         self.iteration = 1
         self.action = 0
@@ -247,23 +246,14 @@ class Skynet:
         self.legal_move = []  # This will be used during get_action, format: (mvt_x, mvt_y, atk_x, atk_y)
 
     def set_q_table(self, q_table):
-        if self.learning == 1:  # Learn from scratch
-            self.q_table = copy.copy(q_table)  # Copy by reference for Skynet vs Skynet
-        else:  # We want to exploit
-            try:
-                f = open(self.q_table_name, 'rb')
-                self.q_table = pickle.loads(f.read())
-                self.epsilon = 0  # we want to exploit, not to relearn
-            except:
-                print("Q table does not exist.")
-                exit()
+        self.q_table = copy.copy(q_table)  # Copy by reference, in case of Skynet vs Skynet
+        if not self.learning:
+            self.epsilon = 0  # We want to exploit
 
     def get_action(self):
         self.legal_move = []  # Reset the table
         #  Get the new list of legal moves
-        self.skynet_mvt, self.skynet_pos_x, self.skynet_pos_y, self.en_pos_x, self.en_pos_y
         self.get_legal_move(self.skynet_mvt, self.skynet_pos_x, self.skynet_pos_y, self.en_pos_x, self.en_pos_y)
-
         if np.random.random() > self.epsilon:  # Maximum value
             max_value = -3  # Will be overwritten
             max_action = -1  # Will be overwritten
@@ -271,12 +261,7 @@ class Skynet:
                 pos_x, pos_y, atk_x, atk_y = move
                 # Get the action for the move, then find its q value
                 curr_action = ACTION_TABLE.index([(pos_x, pos_y), (atk_x, atk_y)])
-                # print("bbbbbbbbbbbbbbbbbb")
-                # print(curr_action)
-
                 curr_value = self.q_table[self.skynet_pos_x, self.skynet_pos_y, self.en_pos_x, self.en_pos_y, curr_action]
-                # print(curr_value)
-                # print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
                 if curr_value > max_value:
                     max_value = curr_value
                     max_action = curr_action
@@ -287,7 +272,6 @@ class Skynet:
             pos_x, pos_y, atk_x, atk_y = self.legal_move[np.random.randint(0, len(self.legal_move))]
             self.action = ACTION_TABLE.index([(pos_x, pos_y), (atk_x, atk_y)])
             # Get the action for the move, needed for get_reward
-        # print(self.action)
         return ACTION_TABLE[self.action]
 
     def get_reward(self, reward, new_skynet_x, new_skynet_y, en_new_x, en_new_y, scenario):
@@ -305,7 +289,6 @@ class Skynet:
         self.interpret_reward(reward, scenario)
 
     def set_reward(self, reward, scenario):
-        #print(reward)
         self.q_table[self.skynet_pos_x, self.skynet_pos_y, self.en_pos_x, self.en_pos_y, self.action] = reward
         self.interpret_reward(reward, scenario)
 
@@ -354,7 +337,7 @@ class Skynet:
                 elif reward == -2:
                     Skynet.scenario_rewards[scenario][1] += 1
                 if self.iteration == 1000:
-                    print(f"Result of Skynet with {self.q_table_name}")
+                    print(f"Result of Skynet with {STARTING_TABLE}")
                     print("---------------------------------------------------")
                     i = 0
                     for scenario in Skynet.scenario_rewards:
@@ -374,13 +357,12 @@ class Skynet:
         if self.iteration % 1000 == 0:
             pass
             # print('\n' * 150)
-            # print("----------------------------")
-            # print(f'AI iterations: {self.iteration}')
-            # print(f'Epsilon: {self.epsilon}')
-            # print("----------------------------")
+            print("----------------------------")
+            print(f'AI iterations: {self.iteration}')
+            print(f'Epsilon: {self.epsilon}')
+            print("----------------------------")
         if self.iteration % SHOW_EVERY == 0 and self.iteration != 0:
-            #graph_by_scenario()
-            pass
+            graph_by_scenario()
         if self.iteration == 10 * SHOW_EVERY:
             self.epsilon = 0.75
         elif self.iteration == 20 * SHOW_EVERY:
@@ -390,12 +372,12 @@ class Skynet:
         elif self.iteration == 40 * SHOW_EVERY:
             self.epsilon = 0
         elif self.iteration == 50 * SHOW_EVERY:
-            f = open(self.q_table_name, 'wb')
+            f = open(STARTING_TABLE, 'wb')
             f.write(pickle.dumps(self.q_table))
             f.close()
-            # print("Learning finished.")
-            # input("Press any key to exit.")
-            # exit()
+            print("Learning finished.")
+            input("Press any key to exit.")
+            exit()
 
         self.iteration += 1
         Skynet.rewards_tmp[scenario].append(reward)

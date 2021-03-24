@@ -48,6 +48,7 @@ def get_action(x, y, hp, enx, eny, enhp):
             dx = enx - current_best_move_xy[0]
             dy = eny - current_best_move_xy[1]
         else:  # Not in range, move as close as possible
+            current_best_move_score = 999
             best_moves.clear()
             for move in legal_move:
                 if ((move[0] == 1 or move[0] == 5) and 1 <= move[1] <= 5) or ((move[1] == 1 or move[1] == 5) and 1 <= move[0] <= 5):
@@ -64,16 +65,16 @@ def get_action(x, y, hp, enx, eny, enhp):
                 total_score = abs(dx) + abs(dy)
                 if total_score == current_best_move_score:
                     final_moves.append((move[0], move[1]))
-            pick = random.randint(0, len(final_moves) - 1)
+            pick = random.randint(0, len(final_moves) - 1) if len(final_moves) >= 2 else 0
             current_best_move_xy = final_moves[pick]
-            if ((enx < 2 and x > 4) or (enx > 4 and x < 2)) and y == 3:
+            if ((enx < 2 and x > 4) or (enx > 4 and x < 2)) and y == 3 and ((enx != 1 or enx != 5) and (eny != 1 or eny != 5)):
                 if eny < 3:
-                    if current_best_move_xy[0] == 5:
+                    if x > 3:
                         current_best_move_xy = (5, 1)
                     else:
                         current_best_move_xy = (1, 1)
                 else:
-                    if current_best_move_xy[0] == 5:
+                    if x > 3:
                         current_best_move_xy = (5, 5)
                     else:
                         current_best_move_xy = (1, 5)

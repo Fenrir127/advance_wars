@@ -37,12 +37,15 @@ MAPSIZE = SMALL
 GAMEMODE = SKYNET_VS_AI
 SCENARIO = ATTACK
 
-LEARNING_SK1 = 1  # 1: start a q_table from scratch; 0: load a q_table
-Q_TABLE_NAME_SK1 = 'skynet_q_table_attack.pickle'
+START_FROM_NEW = 0  # 0: Load a specific q_table to learn from; 1: start a new q_table
+STARTING_TABLE = 'skynet_q_table_attack.pickle'
+
+LEARNING_SK1 = 1  # 1: load a q_table and learn; 0: load a q_table and exploit
+Q_TABLE_NAME_SK1 = 'skynet_q_table_stalemate.pickle'
 LEARNING_SK2 = 0
 Q_TABLE_NAME_SK2 = 'skynet_q_table_aggressive_ai_v1_0.pickle'
 
-ITERATIVE_TRAINING = 1  # if you want to train Skynet on plain map for perfect attacks
+ITERATIVE_TRAINING = 0  # if you want to train Skynet on plain map for perfect attacks
 
 if MAPSIZE == NORMAL:
     GRID_X_SIZE = 32
@@ -60,9 +63,9 @@ elif MAPSIZE == SMALL:
 if GAMEMODE == SKYNET_VS_AI:
     # TODO Change NO_DRAW if you want to see the AI move or not
     WAIT_TIME = 0.5
-    NO_DRAW = False
+    NO_DRAW = True
     STOP_DRAW_AT = 50
-    DRAW_EVERY = 1
+    DRAW_EVERY = 100000
     NB_PLAYER = 2
     if SCENARIO == RUNAWAY:
         MAP_TO_LOAD = 'scenario_runaway.txt'
