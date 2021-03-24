@@ -327,7 +327,7 @@ class Skynet:
         self.en_pos_y = en_y
 
     def interpret_reward(self, reward, scenario):
-        if self.learning == 1:  # Need to show graph
+        if self.learning:  # Need to show graph
             self.update_rewards(reward, scenario)
         else:
             if LEARNING_SK1 == 0:  # We are not learning anything, it's a SHOWDOWN

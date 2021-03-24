@@ -202,8 +202,7 @@ class Game:
                 f = open(STARTING_TABLE, 'rb')
                 self.q_table = pickle.loads(f.read())
             else:
-                self.q_table = np.ones([7, 7, 7, 7] + [125])
-                self.q_table = np.negative(self.q_table)
+                self.q_table = np.full([7, 7, 7, 7] + [125], -1)
             self.skynet.set_q_table(self.q_table)
             self.turn_counter += 1
             if SCENARIO == RUNAWAY:

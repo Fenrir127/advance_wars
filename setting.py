@@ -41,7 +41,7 @@ START_FROM_NEW = 0  # 0: Load a specific q_table to learn from; 1: start a new q
 STARTING_TABLE = 'skynet_q_table_attack_origine.pickle'
 
 LEARNING_SK1 = 1  # 1: load a q_table and learn; 0: load a q_table and exploit
-Q_TABLE_NAME_SK1 = 'skynet_q_table_stalemate.pickle'
+Q_TABLE_NAME_SK1 = 'skynet_q_table_attack.pickle'
 LEARNING_SK2 = 0
 Q_TABLE_NAME_SK2 = 'skynet_q_table_aggressive_ai_v1_0.pickle'
 
