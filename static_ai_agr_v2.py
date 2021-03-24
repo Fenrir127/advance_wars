@@ -25,8 +25,10 @@ def get_action(x, y, hp, enx, eny, enhp):
     get_legal_move(unit_mvt, x, y, enx, eny)
     global legal_move
     best_moves = []
+    closest_moves = []
+    second_closest_moves = []
+    third_closest_moves = []
     final_moves = []
-    second_final_moves = []
     if hp >= enhp:
         current_best_move_score = 999
         for move in legal_move:
@@ -66,36 +68,122 @@ def get_action(x, y, hp, enx, eny, enhp):
                 dy = eny - move[1]
                 total_score = abs(dx) + abs(dy)
                 if total_score == current_best_move_score:
-                    final_moves.append((move[0], move[1]))
+                    closest_moves.append((move[0], move[1]))
                 elif total_score == current_best_move_score + 1:
-                    second_final_moves.append((move[0], move[1]))
-
+                    second_closest_moves.append((move[0], move[1]))
+                elif total_score == current_best_move_score + 2:
+                    third_closest_moves.append((move[0], move[1]))
+            # print(closest_moves)
+            # print(second_closest_moves)
+            # print(third_closest_moves)
+            for move in closest_moves:
+                dx = x - move[0]
+                dy = y - move[1]
+                mvt_used = abs(dx) + abs(dy)
+                if mvt_used == 3:
+                    final_moves.append((move[0], move[1]))
+            if not final_moves:
+                for move in second_closest_moves:
+                    dx = x - move[0]
+                    dy = y - move[1]
+                    mvt_used = abs(dx) + abs(dy)
+                    if mvt_used == 3:
+                        final_moves.append((move[0], move[1]))
+            if not final_moves:
+                for move in third_closest_moves:
+                    dx = x - move[0]
+                    dy = y - move[1]
+                    mvt_used = abs(dx) + abs(dy)
+                    if mvt_used == 3:
+                        final_moves.append((move[0], move[1]))
             if len(final_moves) == 1:
                 pick = 0
             else:
                 pick = random.randint(0, len(final_moves) - 1)
             current_best_move_xy = final_moves[pick]
-            dx = x - current_best_move_xy[0]
-            dy = y - current_best_move_xy[1]
-            mvt_used = abs(dx) + abs(dy)
-            if mvt_used < 3:
-                if len(second_final_moves) == 1:
-                    pick = 0
-                else:
-                    pick = random.randint(0, len(second_final_moves) - 1)
-                current_best_move_xy = second_final_moves[pick]
+            # dx = x - current_best_move_xy[0]
+            #
+            # dy = y - current_best_move_xy[1]
+            # mvt_used = abs(dx) + abs(dy)
+            # while mvt_used < 3:
+            #     if len(second_final_moves) == 1:
+            #         pick = 0
+            #     else:
+            #         pick = random.randint(0, len(second_final_moves) - 1)
+            #     current_best_move_xy = second_final_moves[pick]
+            #     dx = x - current_best_move_xy[0]
+            #     dy = y - current_best_move_xy[1]
+            #     mvt_used = abs(dx) + abs(dy)
+            #     if mvt_used < 3:
+            #         if len(third_final_moves) == 1:
+            #             pick = 0
+            #         else:
+            #             pick = random.randint(0, len(third_final_moves) - 1)
+            #         current_best_move_xy = third_final_moves[pick]
+            #         dx = x - current_best_move_xy[0]
+            #         dy = y - current_best_move_xy[1]
+            #         mvt_used = abs(dx) + abs(dy)
+                    # if mvt_used < 3:
+                    #     if ((enx < 2 and x > 4) or (enx > 4 and x < 2)) and y == 3:
+                    #         if eny < 3:
+                    #             if x == 6:
+                    #                 current_best_move_xy = (5, 1)
+                    #             elif x == 0:
+                    #                 current_best_move_xy = (1, 1)
+                    #             elif x == 5:
+                    #                 current_best_move_xy = (4, 1)
+                    #             elif x == 1:
+                    #                 current_best_move_xy = (2, 1)
+                    #         elif eny < 3:
+                    #             if x == 6:
+                    #                 current_best_move_xy = (5, 5)
+                    #             elif x == 0:
+                    #                 current_best_move_xy = (1, 5)
+                    #             elif x == 5:
+                    #                 current_best_move_xy = (4, 5)
+                    #             elif x == 1:
+                    #                 current_best_move_xy = (2, 5)
+                    #         else:
+                    #             if x == 6:
+                    #                 pick = random.randint(0, 1)
+                    #                 if pick:
+                    #                     current_best_move_xy = (5, 1)
+                    #                 else:
+                    #                     current_best_move_xy = (5, 5)
+                    #             elif x == 0:
+                    #                 pick = random.randint(0, 1)
+                    #                 if pick:
+                    #                     current_best_move_xy = (1, 1)
+                    #                 else:
+                    #                     current_best_move_xy = (1, 5)
+                    #             elif x == 5:
+                    #                 pick = random.randint(0, 1)
+                    #                 if pick:
+                    #                     current_best_move_xy = (4, 1)
+                    #                 else:
+                    #                     current_best_move_xy = (4, 5)
+                    #             elif x == 1:
+                    #                 pick = random.randint(0, 1)
+                    #                 if pick:
+                    #                     current_best_move_xy = (2, 1)
+                    #                 else:
+                    #                     current_best_move_xy = (2, 5)
+                    #     if enx == 3:
+                    #         if eny < 2 and (x == 2 or x == 4) and y == 5:
+                    #             if x == 2:
+                    #                 current_best_move_xy = (1, 3)
+                    #             else:
+                    #                 current_best_move_xy = (5, 3)
+                    #         elif eny > 4 and (x == 2 or x == 4) and y == 1:
+                    #             if x == 2:
+                    #                 current_best_move_xy = (1, 3)
+                    #             else:
+                    #                 current_best_move_xy = (5, 3)
 
-            if ((enx < 2 and x > 4) or (enx > 4 and x < 2)) and y == 3:
-                if eny < 3:
-                    if x > 3:
-                        current_best_move_xy = (5, 1)
-                    else:
-                        current_best_move_xy = (1, 1)
-                else:
-                    if x > 3:
-                        current_best_move_xy = (5, 5)
-                    else:
-                        current_best_move_xy = (1, 5)
+
+                # dx = x - current_best_move_xy[0]
+                # dy = y - current_best_move_xy[1]
+                # mvt_used = abs(dx) + abs(dy)
             dx = 0
             dy = 0
 
