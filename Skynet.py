@@ -4,7 +4,7 @@ import numpy as np
 import copy
 import matplotlib.pyplot as plt
 from matplotlib import style
-from setting import GRID_X_SIZE, GRID_Y_SIZE, MAP_TO_LOAD, LEARNING_SK1, Q_TABLE_NAME_SK1
+from setting import GRID_X_SIZE, GRID_Y_SIZE, MAP_TO_LOAD, LEARNING_SK1, Q_TABLE_NAME_SK1, ITERATIVE_TRAINING
 from os import path
 
 style.use("ggplot")
@@ -182,9 +182,15 @@ ACTION_POSSIBILITIES = len(ACTION_TABLE)  # for an infantry, it is 125 possible 
 def init_map():
     map_init = []
     # This opens the game map and reads the game tile (river, mountain, etc)
-    with open(path.join(path.dirname(__file__), MAP_TO_LOAD), 'rt') as f1:
-        for line in f1:
-            map_init.append(line.strip())
+    # with open(path.join(path.dirname(__file__), 'MAP_TO_LOAD'), 'rt') as f1:
+    if ITERATIVE_TRAINING:
+        with open(path.join(path.dirname(__file__), 'scenario_stalemate.txt'), 'rt') as f1:
+            for line in f1:
+                map_init.append(line.strip())
+    else:
+        with open(path.join(path.dirname(__file__), MAP_TO_LOAD), 'rt') as f1:
+            for line in f1:
+                map_init.append(line.strip())
 
     converter = {'w': 1, 'r': 2, 'p': 1, 'm': 2, 'd': 1, 's': 10}
     mvt_cost_map = [[0 for x in range(GRID_X_SIZE)] for y in range(GRID_Y_SIZE)]
@@ -255,6 +261,7 @@ class Skynet:
     def get_action(self):
         self.legal_move = []  # Reset the table
         #  Get the new list of legal moves
+        self.skynet_mvt, self.skynet_pos_x, self.skynet_pos_y, self.en_pos_x, self.en_pos_y
         self.get_legal_move(self.skynet_mvt, self.skynet_pos_x, self.skynet_pos_y, self.en_pos_x, self.en_pos_y)
 
         if np.random.random() > self.epsilon:  # Maximum value
@@ -264,8 +271,12 @@ class Skynet:
                 pos_x, pos_y, atk_x, atk_y = move
                 # Get the action for the move, then find its q value
                 curr_action = ACTION_TABLE.index([(pos_x, pos_y), (atk_x, atk_y)])
+                # print("bbbbbbbbbbbbbbbbbb")
+                # print(curr_action)
 
                 curr_value = self.q_table[self.skynet_pos_x, self.skynet_pos_y, self.en_pos_x, self.en_pos_y, curr_action]
+                # print(curr_value)
+                # print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
                 if curr_value > max_value:
                     max_value = curr_value
                     max_action = curr_action
@@ -276,6 +287,7 @@ class Skynet:
             pos_x, pos_y, atk_x, atk_y = self.legal_move[np.random.randint(0, len(self.legal_move))]
             self.action = ACTION_TABLE.index([(pos_x, pos_y), (atk_x, atk_y)])
             # Get the action for the move, needed for get_reward
+        # print(self.action)
         return ACTION_TABLE[self.action]
 
     def get_reward(self, reward, new_skynet_x, new_skynet_y, en_new_x, en_new_y, scenario):
@@ -293,6 +305,7 @@ class Skynet:
         self.interpret_reward(reward, scenario)
 
     def set_reward(self, reward, scenario):
+        #print(reward)
         self.q_table[self.skynet_pos_x, self.skynet_pos_y, self.en_pos_x, self.en_pos_y, self.action] = reward
         self.interpret_reward(reward, scenario)
 
@@ -359,13 +372,15 @@ class Skynet:
     def update_rewards(self, reward, scenario):
         episode_rewards.append(reward)
         if self.iteration % 1000 == 0:
-            print('\n' * 150)
-            print("----------------------------")
-            print(f'AI iterations: {self.iteration}')
-            print(f'Epsilon: {self.epsilon}')
-            print("----------------------------")
+            pass
+            # print('\n' * 150)
+            # print("----------------------------")
+            # print(f'AI iterations: {self.iteration}')
+            # print(f'Epsilon: {self.epsilon}')
+            # print("----------------------------")
         if self.iteration % SHOW_EVERY == 0 and self.iteration != 0:
-            graph_by_scenario()
+            #graph_by_scenario()
+            pass
         if self.iteration == 10 * SHOW_EVERY:
             self.epsilon = 0.75
         elif self.iteration == 20 * SHOW_EVERY:
@@ -378,9 +393,9 @@ class Skynet:
             f = open(self.q_table_name, 'wb')
             f.write(pickle.dumps(self.q_table))
             f.close()
-            print("Learning finished.")
-            input("Press any key to exit.")
-            exit()
+            # print("Learning finished.")
+            # input("Press any key to exit.")
+            # exit()
 
         self.iteration += 1
         Skynet.rewards_tmp[scenario].append(reward)

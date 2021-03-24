@@ -198,16 +198,18 @@ class Game:
             self.turn_counter += 1
         elif GAMEMODE == SKYNET_VS_AI:
             self.skynet = Skynet.Skynet(1, 1, 1, 1)
-            self.q_table = np.zeros([7, 7, 7, 7] + [125])
+            self.q_table = np.ones([7, 7, 7, 7] + [125])
+            self.q_table = np.negative(self.q_table)
             self.skynet.set_q_table(self.q_table)
-            self.reset()
             self.turn_counter += 1
             if SCENARIO == RUNAWAY:
                 self.scenario_player_1 = 1
             elif SCENARIO == ATTACK:
                 self.scenario_player_1 = 2
+                self.iterative_training = ITERATIVE_TRAINING
             else:
                 self.scenario_player_1 = 0
+            self.reset()
         elif GAMEMODE == SKYNET_VS_P:
             self.skynet = Skynet.Skynet(1, 1, 1, 1)
             self.q_table = np.zeros([7, 7, 7, 7] + [125])
@@ -255,12 +257,13 @@ class Game:
                 self.player1.units[0].hp = 10
                 self.skynet.set_param(x, y, enx, eny)
             elif SCENARIO == ATTACK:
-                x, y = 6, 3
-                enx, eny = 0, 3
-                self.map.reset(x, y, enx, eny)
-                self.scenario_counter = 0
-                self.player2.units[0].hp = 10
-                self.skynet.set_param(x, y, enx, eny)
+                if not self.iterative_training:
+                    x, y = 6, 3
+                    enx, eny = 0, 3
+                    self.map.reset(x, y, enx, eny)
+                    self.scenario_counter = 0
+                    self.player2.units[0].hp = 10
+                    self.skynet.set_param(x, y, enx, eny)
             else:
                 x, y = self.get_random_pos()
                 enx, eny = self.get_random_pos(x, y)
@@ -361,7 +364,14 @@ class Game:
         self.attack_btn.text = ""
         self.special_btn.text = ""
         if GAMEMODE == SKYNET_VS_AI:
-            self.interpret_ai()
+            if SCENARIO == ATTACK:
+                if self.iterative_training:
+                    self.iterative_attack_training()
+                    self.reset()
+                else:
+                    self.interpret_ai()
+            else:
+                self.interpret_ai()
             for event in pg.event.get():
                 if event.type == pg.QUIT:  # allow close game
                     self.quit()
@@ -1425,7 +1435,7 @@ class Game:
                             self.reset()
                         else:
                             self.erase_highlights()
-                            self.skynet.set_reward(-2, self.scenario_player_1)
+                            self.skynet.set_reward(0, self.scenario_player_1)
                             print("Skynet attacked and was destroyed")
                             print("Reset on scenario turn " + str(self.scenario_counter))
                             self.reset()
@@ -1474,6 +1484,8 @@ class Game:
         unit_y = unit.y
         result = "Something wrong happened, I'm not suppose to print"
         if not (atk_x == atk_y == 0):
+            if unit.hp == 100:
+                new_reward = -2
             self.atk_target(enx, eny, enx + atk_x, eny + atk_y)
             if not self.player1.units:  # Lost by being attacked
                 result = "AI killed Skynet by attacking it"
@@ -1531,15 +1543,15 @@ class Game:
             else:
                 reward = -1 # Skynet didn't kill the enemy yet, neutral reward
 
-        if new_reward:  # If he didn't attack and could in stalemate or attack scenario
+        if new_reward:  # If he didn't attack and could in stalemate or attack scenario or got attacked first in stalemate
             self.skynet.set_reward(new_reward, self.scenario_player_1)
         else:
             self.skynet.get_reward(reward, unit.x, unit.y, enn.x, enn.y, self.scenario_player_1)
 
-        if self.scenario_counter == MAX_SCENARIO_TURN:
-            print("Ended on scenario turn " + str(MAX_SCENARIO_TURN))
-            self.reset()
-            return
+        # if self.scenario_counter == MAX_SCENARIO_TURN:
+        #     print("Ended on scenario turn " + str(MAX_SCENARIO_TURN))
+        #     self.reset()
+        #     return
 
     def ask_interpret_skynet_vs_skynet(self):
         player = self.players[self.turn]
@@ -1663,7 +1675,48 @@ class Game:
         return x, y, lhp, rhp
 
     def iterative_attack_training(self):
-        pass
+        self.skynet.epsilon = 0
+        for a in range(0, 7):
+            for b in range(0, 7):
+                enx, eny = a, b
+                for y in range(0, 7):
+                    for x in range(0, 7):
+                        if not (x == enx and y == eny) and (abs(enx - x) + abs(eny - y)) <= 4:
+                            self.skynet.set_param(x, y, enx, eny)
+                            learning = True
+                            while learning:
+                                self.skynet.epsilon = 1
+                                print(x, y, enx, eny)
+                                action = self.skynet.get_action()
+                                mvt = action[0]
+                                attack = action[1]
+                                # print("Got these action from skynet")
+                                # print(mvt, attack)
+                                if (x + mvt[0] + attack[0]) == enx and (y + mvt[1] + attack[1]) == eny: #1 == (abs(enx - x + mvt[0]) + abs(eny - y + mvt[1])) and
+
+                                    print("that was right")
+
+                                    self.skynet.set_reward(0, 2)
+                                    learning = False
+                                else:
+                                    # print("that was wrong")
+                                    # print(str(abs(enx - x + mvt[0]) + abs(eny - y + mvt[1])) + " Needed to be 1, "
+                                    #       + str(x + mvt[0] + attack[0]) + " Needed to be " + str(enx) + ", " +
+                                    #       str(y + mvt[1] + attack[1]) + " Needed to be " + str(eny))
+                                    self.skynet.set_reward(-2, 2)
+                                    self.skynet.set_param(x, y, enx, eny)
+        self.skynet.epsilon = 1
+        self.iterative_training = False
+        f = open('skynet_q_table_attack.pickle', 'wb')
+        f.write(pickle.dumps(self.skynet.q_table))
+        f.close()
+        exit()
+
+
+
+
+
+
 
 """
     Player class holds info for a player, His ID, units, buildings, CO and funds

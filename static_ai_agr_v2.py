@@ -5,9 +5,9 @@ import random
 grid_x = GRID_X_SIZE
 grid_y = GRID_Y_SIZE
 unit_mvt = 3  # Infantry
-map_init = []
 legal_move = []
 
+map_init = []
 with open(path.join(path.dirname(__file__), MAP_TO_LOAD), 'rt') as f1:
     for line in f1:
         map_init.append(line.strip())

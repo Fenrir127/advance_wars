@@ -35,12 +35,14 @@ NORMAL = 1
 
 MAPSIZE = SMALL
 GAMEMODE = SKYNET_VS_AI
-SCENARIO = RUNAWAY
+SCENARIO = ATTACK
 
 LEARNING_SK1 = 1  # 1: start a q_table from scratch; 0: load a q_table
-Q_TABLE_NAME_SK1 = 'skynet_q_table_runaway.pickle'
+Q_TABLE_NAME_SK1 = 'skynet_q_table_attack.pickle'
 LEARNING_SK2 = 0
 Q_TABLE_NAME_SK2 = 'skynet_q_table_aggressive_ai_v1_0.pickle'
+
+ITERATIVE_TRAINING = 1  # if you want to train Skynet on plain map for perfect attacks
 
 if MAPSIZE == NORMAL:
     GRID_X_SIZE = 32
@@ -109,10 +111,10 @@ BGCOLOR = DARKGREY
 PLAYER1 = 0
 PLAYER2 = 1
 
-#Scenarios
-DISADVANTAGE = 0
-ADVANTAGE = 1
-NEUTRAL = 2
+# #Scenarios
+# DISADVANTAGE = 0
+# ADVANTAGE = 1
+# NEUTRAL = 2
 
 MAX_SCENARIO_TURN = 20
 
