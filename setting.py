@@ -34,14 +34,14 @@ SMALL = 0
 NORMAL = 1
 
 MAPSIZE = SMALL
-GAMEMODE = SKYNET_VS_AI
-SCENARIO = ATTACK
+GAMEMODE = SKYNET_VS_P
+SCENARIO = STALEMATE
 
-START_FROM_NEW = 0  # 0: Load a specific q_table to learn from; 1: start a new q_table
-STARTING_TABLE = 'skynet_q_table_attack_origine.pickle'
+START_FROM_NEW = 1  # 0: Load a specific q_table to learn from; 1: start a new q_table
+STARTING_TABLE = 'skynet_q_table.pickle'  # Doesnt matter if START_FROM_NEW = 1
 
 LEARNING_SK1 = 1  # 1: load a q_table and learn; 0: load a q_table and exploit
-Q_TABLE_NAME_SK1 = 'skynet_q_table_attack.pickle'
+Q_TABLE_NAME_SK1 = 'attack_q_table2.pickle'
 LEARNING_SK2 = 0
 Q_TABLE_NAME_SK2 = 'skynet_q_table_aggressive_ai_v1_0.pickle'
 
@@ -65,7 +65,7 @@ if GAMEMODE == SKYNET_VS_AI:
     WAIT_TIME = 0.5
     NO_DRAW = True
     STOP_DRAW_AT = 50
-    DRAW_EVERY = 100000
+    DRAW_EVERY = 10000
     NB_PLAYER = 2
     if SCENARIO == RUNAWAY:
         MAP_TO_LOAD = 'scenario_runaway.txt'
@@ -93,6 +93,12 @@ if GAMEMODE == SKYNET_VS_P:
     WAIT_TIME = 0
     NO_DRAW = False
     NB_PLAYER = 2
+    if SCENARIO == RUNAWAY:
+        MAP_TO_LOAD = 'scenario_runaway.txt'
+    elif SCENARIO == ATTACK:
+        MAP_TO_LOAD = 'scenario_attack.txt'
+    else:
+        MAP_TO_LOAD = 'scenario_stalemate.txt'
 
 
 

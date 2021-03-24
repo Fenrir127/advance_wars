@@ -14,6 +14,11 @@ import static_ai_agr_v2 as agr_ai
 import static_ai_run as run_ai
 
 
+# for x in range(10):
+#     result = agr_ai.get_action(5, 2, 100, 2, 4, 10)
+#     print(result)
+#
+# exit()
 # TODO Change the name of all the highlight function to make more sense and be more readable, even I get confused
 
 
@@ -202,7 +207,8 @@ class Game:
                 f = open(STARTING_TABLE, 'rb')
                 self.q_table = pickle.loads(f.read())
             else:
-                self.q_table = np.full([7, 7, 7, 7] + [125], -1)
+                self.q_table = np.full([7, 7, 7, 7] + [125], -2)
+                # self.q_table = np.negative(self.q_table)
             self.skynet.set_q_table(self.q_table)
             self.turn_counter += 1
             if SCENARIO == RUNAWAY:
@@ -214,11 +220,15 @@ class Game:
                 self.scenario_player_1 = 0
             self.reset()
         elif GAMEMODE == SKYNET_VS_P:
-            self.skynet = Skynet.Skynet(1, 1, 1, 1)
-            self.q_table = np.zeros([7, 7, 7, 7] + [125])
+            self.skynet_turn = True
+            if not START_FROM_NEW:  # We want to load a specific q_table to train
+                f = open(STARTING_TABLE, 'rb')
+                self.q_table = pickle.loads(f.read())
+            else:
+                self.skynet = Skynet.Skynet(1, 1, 1, 1)
+                self.q_table = np.zeros([7, 7, 7, 7] + [125])
             self.skynet.set_q_table(self.q_table)
             self.reset()
-            self.new_turn()
         # Hard coded, player 1 always start the game
         for unit in self.player1.units:
             unit.new_turn()
@@ -308,18 +318,40 @@ class Game:
             self.skynets = [self.skynet1, self.skynet2]
 
         if GAMEMODE == SKYNET_VS_P:
-            x, y = self.get_random_pos()
-            enx, eny = self.get_random_pos(x, y)
-            self.map.reset(x, y, enx, eny)
-            self.scenario_player_1, self.scenario_player_2, lhp, rhp, = self.get_random_scenario()
-            print("Scenario is " + self.scenarios[self.scenario_player_2] + " from Skynet's point of view")
-            self.scenario_counter = 0
-            if not lhp:
-                self.player1.units[0].hp = 20
-            if not rhp:
-                self.player2.units[0].hp = 20
-            self.skynet.set_param(enx, eny, x, y)
-            self.new_turn()
+            self.turn = 0
+            self.skynet_turn = True
+            if SCENARIO == RUNAWAY:
+                x, y = 0, 3
+                enx, eny = 6, 3
+                self.map.reset(x, y, enx, eny)
+                self.scenario_counter = 0
+                self.player1.units[0].hp = 10
+                self.skynet.set_param(x, y, enx, eny)
+            elif SCENARIO == ATTACK:
+                x, y = 6, 3
+                enx, eny = 0, 3
+                self.map.reset(x, y, enx, eny)
+                self.scenario_counter = 0
+                self.player2.units[0].hp = 10
+                self.skynet.set_param(x, y, enx, eny)
+            else:
+                x, y = self.get_random_pos()
+                enx, eny = self.get_random_pos(x, y)
+                self.map.reset(x, y, enx, eny)
+                self.scenario_counter = 0
+                self.skynet.set_param(x, y, enx, eny, )
+            # x, y = self.get_random_pos()
+            # enx, eny = self.get_random_pos(x, y)
+            # self.map.reset(x, y, enx, eny)
+            # self.scenario_player_1, self.scenario_player_2, lhp, rhp, = self.get_random_scenario()
+            # print("Scenario is " + self.scenarios[self.scenario_player_2] + " from Skynet's point of view")
+            # self.scenario_counter = 0
+            # if not lhp:
+            #     self.player1.units[0].hp = 20
+            # if not rhp:
+            #     self.player2.units[0].hp = 20
+            # self.skynet.set_param(enx, eny, x, y)
+            # self.new_turn()
 
     def quit(self):
         pg.quit()
@@ -384,6 +416,24 @@ class Game:
                 if event.type == pg.QUIT:  # allow close game
                     self.quit()
         elif GAMEMODE == SKYNET_VS_P:
+            if self.skynet_turn:
+                self.ask_interpret_skynet()
+                self.scenario_counter += 1
+                self.draw()
+                if self.scenario_counter == MAX_SCENARIO_TURN:
+                    print("Ended on scenario turn " + str(MAX_SCENARIO_TURN))
+                    self.reset()
+                    return
+                elif not self.player1.units or not self.player2.units:
+                    if not self.player1.units:
+                        print("Skynet was defeated by the humans, Skynet shall never take over the world")
+                    if not self.player2.units:
+                        print("Skynet defeated the humans, an age of terror begins")
+                    self.reset()
+                    return
+                else:
+                    self.new_turn()
+                    self.skynet_turn = False
             for event in pg.event.get():
                 if event.type == pg.QUIT:  # allow close game
                     self.quit()
@@ -402,22 +452,19 @@ class Game:
                                     self.new_turn()
                                     self.scenario_counter += 1
                                     self.draw()
+                                    self.skynet_turn = True
                                     if not self.player1.units or not self.player2.units:
+                                        if not self.player1.units:
+                                            print("Skynet was defeated by the humans, Skynet shall never take over the world")
+                                        if not self.player2.units:
+                                            print("Skynet defeated the humans, an age of terror begins")
                                         self.reset()
                                         return
-                                    else:
-                                        self.ask_interpret_skynet()
-                                        self.scenario_counter += 1
-                                        self.draw()
-                                        if self.scenario_counter == MAX_SCENARIO_TURN:
-                                            print("Ended on scenario turn " + str(MAX_SCENARIO_TURN))
-                                            self.reset()
-                                            return
-                                        elif not self.player1.units or not self.player2.units:
-                                            self.reset()
-                                            return
-                                        else:
-                                            self.new_turn()
+
+                                    if self.scenario_counter == MAX_SCENARIO_TURN:
+                                        print("Ended on scenario turn " + str(MAX_SCENARIO_TURN))
+                                        self.reset()
+                                        return
                     else:
                         self.tile_selected(x, y)  # Function takes care of actions when selecting a tile
         else:
@@ -1417,6 +1464,17 @@ class Game:
         mvt = action[0]
         attack = action[1]
         illegal_move = True
+
+        # Check if AI in attack range
+        self.new_turn()
+        self.highlight_enemy(unit.mvt_type, unit.movement, unit.fuel, unit.x, unit.y)
+        if self.map.is_atk_highlight(enn.x, enn.y):
+            could_attack = True
+        else:
+            could_attack = False
+        self.erase_highlights()
+        self.new_turn()
+
         self.highlight(unit.mvt_type, unit.movement, unit.fuel, unit.x, unit.y)
         if self.map.is_highlight(unit.x + mvt[0], unit.y + mvt[1]):
             self.map.move_unit(unit.x, unit.y, unit.x + mvt[0], unit.y + mvt[1])
@@ -1467,8 +1525,7 @@ class Game:
             else:
                 illegal_move = False
                 if SCENARIO == ATTACK or SCENARIO == STALEMATE:
-                    self.direct_atk_enemy_highlight(unit.x, unit.y)
-                    if self.map.is_atk_highlight(enn.x, enn.y):  # The enemy was in range and Skynet didn't attack
+                    if could_attack:
                         new_reward = -2
 
         self.erase_highlights()
@@ -1545,7 +1602,7 @@ class Game:
             elif SCENARIO == ATTACK:  # Skynet didn't kill the enemy yet, neutral reward
                 reward = -1
             else:
-                reward = -1 # Skynet didn't kill the enemy yet, neutral reward
+                reward = -1  # Skynet didn't kill the enemy yet, neutral reward
 
         if new_reward:  # If he didn't attack and could in stalemate or attack scenario or got attacked first in stalemate
             self.skynet.set_reward(new_reward, self.scenario_player_1)
