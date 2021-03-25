@@ -265,7 +265,11 @@ class Skynet:
 
         else:  # Random action
             # Gets a random legal move
-            pos_x, pos_y, atk_x, atk_y = self.legal_move[np.random.randint(0, len(self.legal_move))]
+            move = self.legal_move[np.random.randint(0, len(self.legal_move))]
+            pos_x = move[0] - self.skynet_pos_x
+            pos_y = move[1] - self.skynet_pos_y
+            atk_x = move[2]
+            atk_y = move[3]
             self.action = ACTION_TABLE.index([(pos_x, pos_y), (atk_x, atk_y)])
             # Get the action for the move, needed for get_reward
         return ACTION_TABLE[self.action]
@@ -364,22 +368,22 @@ class Skynet:
         if self.iteration == 10 * SHOW_EVERY:
             self.epsilon = 0.75
             save_info(self.q_table, Q_TABLE_NAME_SK1)
-            save_info(self.rewards, "rewards_stalemate.pickle")
+            save_info(self.rewards, "new_rewards_stalemate.pickle")
         elif self.iteration == 20 * SHOW_EVERY:
             self.epsilon = 0.5
             save_info(self.q_table, Q_TABLE_NAME_SK1)
-            save_info(self.rewards, "rewards_stalemate.pickle")
+            save_info(self.rewards, "new_rewards_stalemate.pickle")
         elif self.iteration == 30 * SHOW_EVERY:
             self.epsilon = 0.25
             save_info(self.q_table, Q_TABLE_NAME_SK1)
-            save_info(self.rewards, "rewards_stalemate.pickle")
+            save_info(self.rewards, "new_rewards_stalemate.pickle")
         elif self.iteration == 40 * SHOW_EVERY:
             self.epsilon = 0
             save_info(self.q_table, Q_TABLE_NAME_SK1)
-            save_info(self.rewards, "rewards_stalemate.pickle")
+            save_info(self.rewards, "new_rewards_stalemate.pickle")
         elif self.iteration == 50 * SHOW_EVERY:
             save_info(self.q_table, Q_TABLE_NAME_SK1)
-            save_info(self.rewards, "rewards_stalemate.pickle")
+            save_info(self.rewards, "new_rewards_stalemate.pickle")
             print("Learning finished.")
             input("Press any key to exit.")
             exit()
