@@ -223,6 +223,12 @@ def graph_by_scenario():
     plt.pause(0.1)
 
 
+def save_info(to_save, pickle_name):
+    f = open(pickle_name, 'wb')
+    f.write(pickle.dumps(to_save))
+    f.close()
+
+
 class Skynet:
     rewards = [[], [], []]
     rewards_tmp = [[], [], []]
@@ -255,17 +261,7 @@ class Skynet:
         #  Get the new list of legal moves
         self.get_legal_move(self.skynet_mvt, self.skynet_pos_x, self.skynet_pos_y, self.en_pos_x, self.en_pos_y)
         if np.random.random() > self.epsilon:  # Maximum value
-            max_value = -3  # Will be overwritten
-            max_action = -1  # Will be overwritten
-            for move in self.legal_move:
-                pos_x, pos_y, atk_x, atk_y = move
-                # Get the action for the move, then find its q value
-                curr_action = ACTION_TABLE.index([(pos_x, pos_y), (atk_x, atk_y)])
-                curr_value = self.q_table[self.skynet_pos_x, self.skynet_pos_y, self.en_pos_x, self.en_pos_y, curr_action]
-                if curr_value > max_value:
-                    max_value = curr_value
-                    max_action = curr_action
-            self.action = max_action
+            self.action, _ = self.get_max_action(self.skynet_pos_x, self.skynet_pos_y, self.en_pos_x, self.en_pos_y)
 
         else:  # Random action
             # Gets a random legal move
@@ -275,7 +271,9 @@ class Skynet:
         return ACTION_TABLE[self.action]
 
     def get_reward(self, reward, new_skynet_x, new_skynet_y, en_new_x, en_new_y, scenario):
-        max_future_q = np.max(self.q_table[new_skynet_x, new_skynet_y, en_new_x, en_new_y])
+        self.legal_move = []  # Reset the table
+        self.get_legal_move(self.skynet_mvt, new_skynet_x, new_skynet_y, en_new_x, en_new_y)  # We got
+        _, max_future_q = self.get_max_action(new_skynet_x, new_skynet_y, en_new_x, en_new_y)
         # maximum possible value for the next state
         current_q = self.q_table[self.skynet_pos_x, self.skynet_pos_y, self.en_pos_x, self.en_pos_y, self.action]
         # current q_value that we need to modify because an action was taken
@@ -298,10 +296,10 @@ class Skynet:
         if x == enx and y == eny:  # if on enemy tile
             return
         if abs(enx - x) + abs(eny - y) == self.skynet_range:  # enemy is one tile away
-            if (x - self.skynet_pos_x, y - self.skynet_pos_y, enx - x, eny - y) not in self.legal_move:
-                self.legal_move.append((x - self.skynet_pos_x, y - self.skynet_pos_y, enx - x, eny - y))
-        if (x - self.skynet_pos_x, y - self.skynet_pos_y, 0, 0) not in self.legal_move:
-            self.legal_move.append((x - self.skynet_pos_x, y - self.skynet_pos_y, 0, 0))
+            if (x, y, enx - x, eny - y) not in self.legal_move:
+                self.legal_move.append((x, y, enx - x, eny - y))
+        if (x, y, 0, 0) not in self.legal_move:
+            self.legal_move.append((x, y, 0, 0))
 
         if direction != "down":
             if y - 1 >= 0:
@@ -365,16 +363,23 @@ class Skynet:
             graph_by_scenario()
         if self.iteration == 10 * SHOW_EVERY:
             self.epsilon = 0.75
+            save_info(self.q_table, Q_TABLE_NAME_SK1)
+            save_info(self.rewards, "rewards_stalemate.pickle")
         elif self.iteration == 20 * SHOW_EVERY:
             self.epsilon = 0.5
+            save_info(self.q_table, Q_TABLE_NAME_SK1)
+            save_info(self.rewards, "rewards_stalemate.pickle")
         elif self.iteration == 30 * SHOW_EVERY:
             self.epsilon = 0.25
+            save_info(self.q_table, Q_TABLE_NAME_SK1)
+            save_info(self.rewards, "rewards_stalemate.pickle")
         elif self.iteration == 40 * SHOW_EVERY:
             self.epsilon = 0
+            save_info(self.q_table, Q_TABLE_NAME_SK1)
+            save_info(self.rewards, "rewards_stalemate.pickle")
         elif self.iteration == 50 * SHOW_EVERY:
-            f = open(Q_TABLE_NAME_SK1, 'wb')
-            f.write(pickle.dumps(self.q_table))
-            f.close()
+            save_info(self.q_table, Q_TABLE_NAME_SK1)
+            save_info(self.rewards, "rewards_stalemate.pickle")
             print("Learning finished.")
             input("Press any key to exit.")
             exit()
@@ -386,3 +391,18 @@ class Skynet:
                 sum(Skynet.rewards_tmp[scenario]) / len(Skynet.rewards_tmp[scenario]))  # averages it to save memory
             Skynet.rewards_tmp[scenario] = []
 
+    def get_max_action(self, x, y, en_x, en_y):  # Gets the best action considering the current parameters
+        max_value = -999  # Will be overwritten
+        max_action = -1  # Will be overwritten
+        for move in self.legal_move:
+            pos_x = move[0] - x
+            pos_y = move[1] - y
+            atk_x = move[2]
+            atk_y = move[3]
+            # Get the action for the move, then find its q value
+            curr_action = ACTION_TABLE.index([(pos_x, pos_y), (atk_x, atk_y)])
+            curr_value = self.q_table[x, y, en_x, en_y, curr_action]
+            if curr_value > max_value:
+                max_value = curr_value
+                max_action = curr_action
+        return max_action, max_value
