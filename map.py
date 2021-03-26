@@ -12,7 +12,15 @@ class Map:
     and takes care of giving information to Game. It also takes care of moving units and such actions.
     """
 
-    def __init__(self, game):
+    def __init__(self, game, testing):
+        if testing:
+            global MAP_TO_LOAD
+            global PLAYER1_UNIT_TO_LOAD
+            global PLAYER2_UNIT_TO_LOAD
+            MAP_TO_LOAD = testing
+            PLAYER1_UNIT_TO_LOAD = 'player1_test.txt'
+            PLAYER2_UNIT_TO_LOAD = 'player2_test.txt'
+
         self.game = game
         self.map = [[0 for x in range(GRID_X_SIZE)] for y in range(GRID_Y_SIZE)]
         self.map_terrain = []  # temporary array that hold the info of terrains.txt while we copy it
@@ -46,19 +54,20 @@ class Map:
                 for y in range(0, GRID_Y_SIZE):
                     self.get_tile(x, y).add_unit(self.game.player2, self.map_player2_unit[y][x])
 
-    def reset(self, _x, _y, enx, eny):
+    def reset(self, _x=None, _y=None, enx=None, eny=None):
         del self.map
         self.map = [[0 for x in range(GRID_X_SIZE)] for y in range(GRID_Y_SIZE)]
         for x in range(0, GRID_X_SIZE):
             for y in range(0, GRID_Y_SIZE):
                 self.map[y][x] = Tile(self.game, self.map_terrain[y][x], x, y)
-        self.get_tile(_x, _y).add_unit(self.game.player1, 'i')
-        self.get_tile(enx, eny).add_unit(self.game.player2, 'i')
+        if _x != None and _y != None:
+            self.get_tile(_x, _y).add_unit(self.game.player1, 'i')
+        if enx != None and eny != None:
+            self.get_tile(enx, eny).add_unit(self.game.player2, 'i')
         # for x in range(0, GRID_X_SIZE):
         #     for y in range(0, GRID_Y_SIZE):
         #         self.get_tile(x, y).add_unit(self.game.player1, self.map_player1_unit[y][x])
         #         self.get_tile(x, y).add_unit(self.game.player2, self.map_player2_unit[y][x])
-
 
     def get_tile(self, x, y):  # returns reference to a tile on the map
         return self.map[y][x]
@@ -103,8 +112,8 @@ class Map:
 
     def atk_highlight_tile(self, x, y):  # atk highlights a tile
         if not self.get_tile(x, y).atk_highlighted:
+            # print((x, y))
             self.get_tile(x, y).atk_highlighted = Atk_highlight(self.game, x, y)
-
 
     def atk_unhighlight_tile(self, x, y):  # atk unhighlights a tile
         self.get_tile(x, y).atk_highlighted.kill()
@@ -115,13 +124,12 @@ class Map:
         self.get_tile(x, y).highlighted = None
         self.get_tile(x, y).fuel_cost = 0
 
-
     def is_unit(self, x, y):  # returns if a tile has a unit on it
         if self.get_tile(x, y).unit:
             return True
 
     def move_unit(self, x1, y1, x2, y2):  # moves a unit to another tile
-        if 0 > x2 > GRID_X_SIZE-1 or 0 > y2 > GRID_Y_SIZE or 0 > x1 > GRID_X_SIZE-1 or 0 > y1 > GRID_Y_SIZE:
+        if 0 > x2 > GRID_X_SIZE - 1 or 0 > y2 > GRID_Y_SIZE or 0 > x1 > GRID_X_SIZE - 1 or 0 > y1 > GRID_Y_SIZE:
             print("You tried to move a unit out of bound")
             print("x1, y1, x2, y2:")
             print(x1, y1, x2, y2)
@@ -168,11 +176,12 @@ class Map:
                     if unit.hp > FULL_HP:
                         unit.hp = FULL_HP
 
-
     """
     The Tile class takes care of holding all the information available within one tile of the map
     it doesn't do much expect that
     """
+
+
 class Tile:
     def __init__(self, game, terrain, x, y):
         self.game = game
