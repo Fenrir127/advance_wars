@@ -35,12 +35,9 @@ def get_action(x, y, hp, enx, eny, enhp):
     for move in legal_move:
         if ((move[0] == 1 or move[0] == 5) and 1 <= move[1] <= 5) or ((move[1] == 1 or move[1] == 5) and 1 <= move[0] <= 5):
             best_moves.append((move[0], move[1]))
-
-    # print(best_moves)
     for move in dangerous_move:
         if (move[0], move[1]) in best_moves:
             best_moves.remove((move[0], move[1]))
-    # print(best_moves)
     if best_moves:
         current_best_move_score = 0
         for move in best_moves:

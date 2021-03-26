@@ -5,8 +5,6 @@ from setting import INFANTRY
 import static_ai_agr_v2 as agr_ai
 import static_ai_run as run_ai
 
-import time
-
 
 class TestGame(unittest.TestCase):
 

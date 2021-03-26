@@ -8,7 +8,7 @@ from terrains import *
 
 class Map:
     """
-    Map has a 32x 24y grid of the gameworld and the terrain, units and highlight in it. It contains all this information
+    Map has a 32x 24y or 7x 7y grid of the gameworld and the terrain, units and highlight in it. It contains all this information
     and takes care of giving information to Game. It also takes care of moving units and such actions.
     """
 
@@ -64,10 +64,6 @@ class Map:
             self.get_tile(_x, _y).add_unit(self.game.player1, 'i')
         if enx != None and eny != None:
             self.get_tile(enx, eny).add_unit(self.game.player2, 'i')
-        # for x in range(0, GRID_X_SIZE):
-        #     for y in range(0, GRID_Y_SIZE):
-        #         self.get_tile(x, y).add_unit(self.game.player1, self.map_player1_unit[y][x])
-        #         self.get_tile(x, y).add_unit(self.game.player2, self.map_player2_unit[y][x])
 
     def get_tile(self, x, y):  # returns reference to a tile on the map
         return self.map[y][x]

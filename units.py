@@ -4,12 +4,6 @@ from setting import *
 
 """
 This contains all the information for the different units in the game
-Nothing should change in there except maybe hp when we implement combat
-
-When you implement a new unit to the game you need to:
-    Make a new unit class
-    make sure id_unit() in Tile can identify it from the .txt file (give it a letter ex. t for tank, make sure it's not already taken!!))
-    create a sprite class for it (you can copy paste the template of infantry) i'll implement the image for the unit
 """
 
 #TODO do a clean up, lots of info is now unused or redondant and this can be improved
@@ -100,7 +94,7 @@ class Unit:
 
 class Infantry(Unit):
     def __init__(self, player, game, x, y):
-        super().__init__()  # the super init doesn't really do anything for now
+        super().__init__()
         self.x = x
         self.y = y
         self.game = game
@@ -120,7 +114,7 @@ class Infantry(Unit):
 
 class Tank(Unit):
     def __init__(self, player, game, x, y):
-        super().__init__()  # the super init doesn't really do anything for now
+        super().__init__()
         self.x = x
         self.y = y
         self.game = game
@@ -140,7 +134,7 @@ class Tank(Unit):
 
 class Apc(Unit):
     def __init__(self, player, game, x, y):
-        super().__init__()  # the super init doesn't really do anything for now
+        super().__init__()
         self.x = x
         self.y = y
         self.game = game
@@ -161,7 +155,7 @@ class Apc(Unit):
 
 class Artillery(Unit):
     def __init__(self, player, game, x, y):
-        super().__init__()  # the super init doesn't really do anything for now
+        super().__init__()
         self.x = x
         self.y = y
         self.game = game
@@ -182,7 +176,7 @@ class Artillery(Unit):
 
 class Recon(Unit):
     def __init__(self, player, game, x, y):
-        super().__init__()  # the super init doesn't really do anything for now
+        super().__init__()
         self.x = x
         self.y = y
         self.game = game
@@ -202,7 +196,7 @@ class Recon(Unit):
 
 class Mech(Unit):
     def __init__(self, player, game, x, y):
-        super().__init__()  # the super init doesn't really do anything for now
+        super().__init__()
         self.x = x
         self.y = y
         self.game = game
@@ -222,7 +216,7 @@ class Mech(Unit):
 
 class MDTank(Unit):
     def __init__(self, player, game, x, y):
-        super().__init__()  # the super init doesn't really do anything for now
+        super().__init__()
         self.x = x
         self.y = y
         self.game = game
@@ -242,7 +236,7 @@ class MDTank(Unit):
 
 class Antiair(Unit):
     def __init__(self, player, game, x, y):
-        super().__init__()  # the super init doesn't really do anything for now
+        super().__init__()
         self.x = x
         self.y = y
         self.game = game
@@ -262,7 +256,7 @@ class Antiair(Unit):
 
 class Missiles(Unit):
     def __init__(self, player, game, x, y):
-        super().__init__()  # the super init doesn't really do anything for now
+        super().__init__()
         self.x = x
         self.y = y
         self.game = game
@@ -283,7 +277,7 @@ class Missiles(Unit):
 
 class Rockets(Unit):
     def __init__(self, player, game, x, y):
-        super().__init__()  # the super init doesn't really do anything for now
+        super().__init__()
         self.x = x
         self.y = y
         self.game = game

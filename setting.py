@@ -4,7 +4,6 @@
     GRID_X_SIZE, GRID_Y_SIZE, TILESIZE, PLAYER1_UNIT_TO_LOAD, PLAYER2_UNIT_TO_LOAD and some colors.
     To use another size for the map, Change the GRID_X_SIZE and GRID_Y_SIZE to match the size of your map.
     Also, change the MAP_TO_LOAD, PLAYER1_UNIT_TO_LOAD, PLAYER2_UNIT_TO_LOAD to load the files you want.
-    This hasn't been thoroughly tested
 """
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -120,8 +119,6 @@ TITLE = "Basic Wars"
 BGCOLOR = DARKGREY
 
 
-# GRIDWIDTH = GRID_WIDTH / TILESIZE
-# GRIDHEIGHT = HEIGHT / TILESIZE
 
 # Players
 PLAYER1 = 0
@@ -210,9 +207,6 @@ APC = 15
 TCOPTER = 16
 LANDER = 17
 
-# THESE ARE THE EFFING !@#$ TABLES FOR DAMAGE
-# TOOK ME FRICKING 2 HOURS TO MAKE BETTER BE GRATEFUL!!!!
-# Do not change please, I will murder someone
 
 # To access how much a unit deals damage to another, figure out which weapon it is using (Main or Alt) and
 # search the table using this method main_wpn[defender type][attacker type]

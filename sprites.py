@@ -6,8 +6,6 @@ This contains all the Classes for the sprites
 This is mainly used to draw and not much else
 """
 
-#TODO since most sprite are the same except for the actual image, we can compact almost all this code into 3 class.
-# One for terrain, one for unit and one for highlight.
 
 # ---------------------Terrains---------------------------
 
@@ -18,8 +16,6 @@ class Plain_sprite(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = self.game.plain_image
-        # self.image = pg.Surface((TILESIZE, TILESIZE))
-        # self.image.fill(GREEN)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
@@ -48,8 +44,6 @@ class Wood_sprite(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = self.game.wood_image
-        # self.image = pg.Surface((TILESIZE, TILESIZE))
-        # self.image.fill(GREEN)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
@@ -64,8 +58,6 @@ class Mountain_sprite(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.image = self.game.mountain_image
-        # self.image = pg.Surface((TILESIZE, TILESIZE))
-        # self.image.fill(GREEN)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
@@ -99,6 +91,7 @@ class Beach_sprite(pg.sprite.Sprite):
         self.y = y
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
+
 
 class Road_sprite(pg.sprite.Sprite):
     def __init__(self, game, x, y):
@@ -169,6 +162,7 @@ class Hq_sprite(pg.sprite.Sprite):
         self.y = y
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
+
 
 # ------------------------Units----------------------------
 
@@ -342,6 +336,7 @@ class Rockets_sprite(pg.sprite.Sprite):
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
 
+
 # ------------------------------Highlight--------------------------
 
 
@@ -380,6 +375,7 @@ class Atk_highlight(pg.sprite.Sprite):
         self.game.map.atk_unhighlight_tile(self.x, self.y)
         self.kill()
 
+
 class Available(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.name = "available highlight"
@@ -393,6 +389,7 @@ class Available(pg.sprite.Sprite):
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
 
+
 class Select(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.name = "select"
@@ -405,5 +402,3 @@ class Select(pg.sprite.Sprite):
         self.y = y
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
-
-

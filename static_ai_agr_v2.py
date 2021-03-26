@@ -74,9 +74,6 @@ def get_action(x, y, hp, enx, eny, enhp):
                     second_closest_moves.append((move[0], move[1]))
                 elif total_score == current_best_move_score + 2:
                     third_closest_moves.append((move[0], move[1]))
-            # print(closest_moves)
-            # print(second_closest_moves)
-            # print(third_closest_moves)
             for move in closest_moves:
                 dx = x - move[0]
                 dy = y - move[1]
@@ -260,9 +257,6 @@ def test_get_action(moves, x, y, hp, enx, eny, enhp):
                     second_closest_moves.append((move[0], move[1]))
                 elif total_score == current_best_move_score + 2:
                     third_closest_moves.append((move[0], move[1]))
-            # print(closest_moves)
-            # print(second_closest_moves)
-            # print(third_closest_moves)
             for move in closest_moves:
                 dx = x - move[0]
                 dy = y - move[1]

@@ -5,16 +5,7 @@ from setting import *
 """
 This contains all the information for the different terrain in the game
 Nothing should change in there unless there's a way to change terrain in the game which I don't think there is (except building hp)
-
-When you implement a new terrain in the game you need to:
-    Make a new terrain class
-    make sure id_terrain() in Tile can identify it from the .txt file (give it a letter ex. m for mountain, make sure it's not already taken!!)
-    create a sprite class for it (you can copy paste the template of Plain) i'll implement the image for the unit
 """
-
-
-#TODO do a clean up, lots of info is now unused or redondant and this can be improved
-
 
 
 # This is the master class Terrain which only serves to pass on the function get_mvt_cost()
@@ -53,7 +44,7 @@ class Terrain:
 
 class Plain(Terrain):
     def __init__(self, game, x, y):
-        super().__init__(game)     # the super init doesn't really do anything for now
+        super().__init__(game)  # the super init doesn't really do anything for now
         self.sprite = Plain_sprite(game, x, y)
         self.name = "Plain"
         self.defense = 1
@@ -72,7 +63,7 @@ class Plain(Terrain):
 
 class River(Terrain):
     def __init__(self, game, x, y):
-        super().__init__(game)     # the super init doesn't really do anything for now
+        super().__init__(game)  # the super init doesn't really do anything for now
         self.sprite = River_sprite(game, x, y)
         self.name = "River"
         self.defense = 0
@@ -91,7 +82,7 @@ class River(Terrain):
 
 class Wood(Terrain):
     def __init__(self, game, x, y):
-        super().__init__(game)     # the super init doesn't really do anything for now
+        super().__init__(game)  # the super init doesn't really do anything for now
         self.sprite = Wood_sprite(game, x, y)
         self.name = "Wood"
         self.defense = 2
@@ -110,7 +101,7 @@ class Wood(Terrain):
 
 class Mountain(Terrain):
     def __init__(self, game, x, y):
-        super().__init__(game)      # the super init doesn't really do anything for now
+        super().__init__(game)  # the super init doesn't really do anything for now
         self.sprite = Mountain_sprite(game, x, y)
         self.name = "Mountain"
         self.defense = 4
@@ -126,9 +117,10 @@ class Mountain(Terrain):
         self.ship_mvt_cost = 0
         self.transport_mvt_cost = 0
 
+
 class Sea(Terrain):
     def __init__(self, game, x, y):
-        super().__init__(game)       # the super init doesn't really do anything for now
+        super().__init__(game)  # the super init doesn't really do anything for now
         self.sprite = Sea_sprite(game, x, y)
         self.name = "Sea"
         self.defense = 0
@@ -147,7 +139,7 @@ class Sea(Terrain):
 
 class Beach(Terrain):
     def __init__(self, game, x, y):
-        super().__init__(game)       # the super init doesn't really do anything for now
+        super().__init__(game)  # the super init doesn't really do anything for now
         self.sprite = Beach_sprite(game, x, y)
         self.name = "Sea"
         self.defense = 0
@@ -166,7 +158,7 @@ class Beach(Terrain):
 
 class Road(Terrain):
     def __init__(self, game, x, y):
-        super().__init__(game)     # the super init doesn't really do anything for now
+        super().__init__(game)  # the super init doesn't really do anything for now
         self.sprite = Road_sprite(game, x, y)
         self.name = "Road"
         self.defense = 0
@@ -185,7 +177,7 @@ class Road(Terrain):
 
 class City(Terrain):
     def __init__(self, game, x, y, owner):
-        super().__init__(game)     # the super init doesn't really do anything for now
+        super().__init__(game)  # the super init doesn't really do anything for now
         self.sprite = City_sprite(game, x, y, owner)
         self.name = "City"
         self.defense = 3
@@ -219,10 +211,9 @@ class City(Terrain):
         self.owner.buildings.append(self)
 
 
-
 class Factory(Terrain):
     def __init__(self, game, x, y, owner):
-        super().__init__(game)     # the super init doesn't really do anything for now
+        super().__init__(game)  # the super init doesn't really do anything for now
         self.sprite = Factory_sprite(game, x, y, owner)
         self.name = "factory"
         self.defense = 3
@@ -258,7 +249,7 @@ class Factory(Terrain):
 
 class HQ(Terrain):
     def __init__(self, game, x, y, owner):
-        super().__init__(game)     # the super init doesn't really do anything for now
+        super().__init__(game)  # the super init doesn't really do anything for now
         self.sprite = Hq_sprite(game, x, y, owner)
         self.name = "HQ"
         self.defense = 4
@@ -289,5 +280,4 @@ class HQ(Terrain):
         self.game.preview_text.text = ""
         self.game.preview_text.text = "You win the game!!!"
         self.game.draw()
-        while 1:
-            pass
+        exit()
