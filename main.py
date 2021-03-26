@@ -41,7 +41,7 @@ class Game:
     def load_data(self):  # used for future loading purposes, does nothing for now
         pass
 
-    def new(self):
+    def new(self, testing_map=None):
         # initialize all variables and do all the setup for a new game
         # This is where we initialize the buttons and the text boxes
         self.textboxes = []
@@ -186,7 +186,7 @@ class Game:
         #     self.players = [self.player1]
 
         # creates the map and the reference
-        self.map = Map(self)
+        self.map = Map(self, testing_map)
         self.turn_counter = 0
 
     def run(self):
@@ -227,6 +227,7 @@ class Game:
             else:
                 self.skynet = Skynet.Skynet(1, 1, 1, 1)
                 self.q_table = np.zeros([7, 7, 7, 7] + [125])
+            self.skynet = Skynet.Skynet(1, 1, 1, 1, LEARNING_SK1)
             self.skynet.set_q_table(self.q_table)
             self.reset()
         # Hard coded, player 1 always start the game
@@ -1455,6 +1456,8 @@ class Game:
 
     def interpret_ai(self):
         new_reward = None
+        skynet_attacked = False
+        ai_attacked = False
         player = self.players[self.turn]
         other_player = self.players[(self.turn + 1) % NB_PLAYER]
         unit = player.units[0]
@@ -1483,6 +1486,8 @@ class Game:
                 if self.map.is_atk_highlight(unit.x + attack[0], unit.y + attack[1]):
                     unit_x, unit_y, enx, eny = unit.x, unit.y, enn.x, enn.y
                     self.atk_target(unit.x, unit.y, unit.x + attack[0], unit.y + attack[1])
+                    if SCENARIO == STALEMATE:
+                        skynet_attacked = True  # Will be used to set the reward to 0
                     illegal_move = False
                     if not player.units:  # Lost from attacking
                         if SCENARIO == RUNAWAY:
@@ -1497,7 +1502,7 @@ class Game:
                             self.reset()
                         else:
                             self.erase_highlights()
-                            self.skynet.set_reward(0, self.scenario_player_1)
+                            self.skynet.set_reward(0, self.scenario_player_1)  # He attacked, which is always the best move, even if you die!
                             print("Skynet attacked and was destroyed")
                             print("Reset on scenario turn " + str(self.scenario_counter))
                             self.reset()
@@ -1524,9 +1529,6 @@ class Game:
                     self.map.move_unit(unit.x, unit.y, unit.x - mvt[0], unit.y - mvt[1])
             else:
                 illegal_move = False
-                if SCENARIO == ATTACK or SCENARIO == STALEMATE:
-                    if could_attack:
-                        new_reward = -2
 
         self.erase_highlights()
         self.new_turn()
@@ -1545,8 +1547,7 @@ class Game:
         unit_y = unit.y
         result = "Something wrong happened, I'm not suppose to print"
         if not (atk_x == atk_y == 0):
-            if unit.hp == 100:
-                new_reward = -2
+            ai_attacked = True
             self.atk_target(enx, eny, enx + atk_x, eny + atk_y)
             if not self.player1.units:  # Lost by being attacked
                 result = "AI killed Skynet by attacking it"
@@ -1554,6 +1555,12 @@ class Game:
                 result = "AI killed himself by attacking Skynet"
         self.new_turn()
 
+        if skynet_attacked:  # If skynet attacked, then the reward should be 0
+            new_reward = 0
+        elif ai_attacked or (could_attack and SCENARIO != RUNAWAY):  # If the AI attacked, but not Skynet, it's a bad move. Same if it could've attacked.
+            new_reward = -2
+        else:  # No one attacked, so the reward should be -1 as in "no change".
+            new_reward = None  # Will interpret next state Q values instead to determine the new current Q value
         # REWARD
         if not self.player1.units:  # Skynet lost by being attacked
             if SCENARIO == RUNAWAY:
@@ -1564,8 +1571,8 @@ class Game:
                 print(result)
                 print("The AI attacked Skynet in the scenario attack and won, this is not suppose to happen")
                 self.reset()
-            else:
-                self.skynet.set_reward(-2, self.scenario_player_1)
+            else:  # Scenario STALEMATE
+                self.skynet.set_reward(new_reward, self.scenario_player_1)  # Will never be none since someone attacked
                 print(result)
                 self.reset()
             return
@@ -1586,7 +1593,7 @@ class Game:
                           "this is not behavior we want to teach Skynet")
                     self.reset()
                 else:
-                    self.skynet.get_reward(0, unit_x, unit_y, enx, eny, self.scenario_player_1)
+                    self.skynet.get_reward(0, unit_x, unit_y, enx, eny, self.scenario_player_1)  # AI flees when losing, so it MUST have been an attack
                     print(result)
                     print("The AI attacked Skynet in the scenario stalemate and lost,"
                           "The training AI is not suppose to behave this way."
@@ -1596,17 +1603,13 @@ class Game:
         if illegal_move:  # No one died, but illegal move
             print(f'Illegal move given: {action} --- {self.skynet.skynet_pos_x, self.skynet.skynet_pos_y}')
             exit()
-        else:
-            if SCENARIO == RUNAWAY:  # Skynet survived, positive reward
-                reward = 0
-            elif SCENARIO == ATTACK:  # Skynet didn't kill the enemy yet, neutral reward
-                reward = -1
-            else:
-                reward = -1  # Skynet didn't kill the enemy yet, neutral reward
-
-        if new_reward:  # If he didn't attack and could in stalemate or attack scenario or got attacked first in stalemate
+        # No one died
+        if new_reward is not None:  # If he didn't attack and could in stalemate or attack scenario or got attacked first in stalemate
             self.skynet.set_reward(new_reward, self.scenario_player_1)
         else:
+            reward = -1
+            if SCENARIO == RUNAWAY:  # Skynet survived, positive reward
+                reward = 0
             self.skynet.get_reward(reward, unit.x, unit.y, enn.x, enn.y, self.scenario_player_1)
 
         if self.scenario_counter == MAX_SCENARIO_TURN:
@@ -1869,7 +1872,8 @@ class Textbox:
 
 
 # create the game object
-g = Game()
-g.new()
-while True:
-    g.run()
+if __name__ == '__main__':
+    g = Game()
+    g.new()
+    while True:
+        g.run()

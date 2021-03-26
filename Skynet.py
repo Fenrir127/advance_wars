@@ -3,7 +3,7 @@ import numpy as np
 import copy
 import matplotlib.pyplot as plt
 from matplotlib import style
-from setting import GRID_X_SIZE, GRID_Y_SIZE, MAP_TO_LOAD, LEARNING_SK1, Q_TABLE_NAME_SK1, STARTING_TABLE, ITERATIVE_TRAINING
+from setting import GRID_X_SIZE, GRID_Y_SIZE, MAP_TO_LOAD, LEARNING_SK1, Q_TABLE_NAME_SK1, STARTING_TABLE, ITERATIVE_TRAINING, REWARD_PICKLE
 from os import path
 
 style.use("ggplot")
@@ -200,15 +200,6 @@ def init_map():
     return mvt_cost_map
 
 
-def graph():
-    moving_avg = np.convolve(episode_rewards, np.ones((SHOW_EVERY,)) / SHOW_EVERY, mode='valid')
-    plt.plot([i for i in range(len(moving_avg))], moving_avg)
-    plt.ylabel(f"Reward {SHOW_EVERY}ma")
-    plt.xlabel("iteration #")
-    plt.show(block=False)
-    plt.pause(0.1)
-
-
 def graph_by_scenario():
     plt.clf()
     for index, scn_rewards in enumerate(Skynet.rewards):
@@ -345,10 +336,8 @@ class Skynet:
                     for scenario in Skynet.scenario_rewards:
                         print(scenario)
                         print(f"SCENARIO {i}")
-                        if scenario[1] == 0:
-                            print("100%")
-                        elif scenario[0] == 0:
-                            print("0%")
+                        if scenario[0] + scenario[1] == 0:  # Divide by 0
+                            print("Nothing was recorded for this scenario")
                         else:
                             print(f'{100 * scenario[0] / (scenario[0] + scenario[1])}%')
                         i += 1
@@ -368,22 +357,22 @@ class Skynet:
         if self.iteration == 10 * SHOW_EVERY:
             self.epsilon = 0.75
             save_info(self.q_table, Q_TABLE_NAME_SK1)
-            save_info(self.rewards, "new_rewards_stalemate.pickle")
+            save_info(self.rewards, REWARD_PICKLE)
         elif self.iteration == 20 * SHOW_EVERY:
             self.epsilon = 0.5
             save_info(self.q_table, Q_TABLE_NAME_SK1)
-            save_info(self.rewards, "new_rewards_stalemate.pickle")
+            save_info(self.rewards, REWARD_PICKLE)
         elif self.iteration == 30 * SHOW_EVERY:
             self.epsilon = 0.25
             save_info(self.q_table, Q_TABLE_NAME_SK1)
-            save_info(self.rewards, "new_rewards_stalemate.pickle")
+            save_info(self.rewards, REWARD_PICKLE)
         elif self.iteration == 40 * SHOW_EVERY:
             self.epsilon = 0
             save_info(self.q_table, Q_TABLE_NAME_SK1)
-            save_info(self.rewards, "new_rewards_stalemate.pickle")
+            save_info(self.rewards, REWARD_PICKLE)
         elif self.iteration == 50 * SHOW_EVERY:
             save_info(self.q_table, Q_TABLE_NAME_SK1)
-            save_info(self.rewards, "new_rewards_stalemate.pickle")
+            save_info(self.rewards, REWARD_PICKLE)
             print("Learning finished.")
             input("Press any key to exit.")
             exit()

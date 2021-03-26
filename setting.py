@@ -34,16 +34,17 @@ SMALL = 0
 NORMAL = 1
 
 MAPSIZE = SMALL
-GAMEMODE = SKYNET_VS_P
-SCENARIO = STALEMATE
+GAMEMODE = SKYNET_VS_AI
+SCENARIO = ATTACK
 
-START_FROM_NEW = 1  # 0: Load a specific q_table to learn from; 1: start a new q_table
-STARTING_TABLE = 'skynet_q_table.pickle'  # Doesnt matter if START_FROM_NEW = 1
+START_FROM_NEW = 0  # 0: Load a specific q_table to learn from; 1: start a new q_table
+STARTING_TABLE = 'FINAL_attack.pickle'  # Doesnt matter if START_FROM_NEW = 1
 
-LEARNING_SK1 = 1  # 1: load a q_table and learn; 0: load a q_table and exploit
-Q_TABLE_NAME_SK1 = 'attack_q_table2.pickle'
+LEARNING_SK1 = 0  # 1: load a q_table and learn; 0: load a q_table and exploit
+Q_TABLE_NAME_SK1 = 'FINAL_stalemate_03.pickle'
 LEARNING_SK2 = 0
 Q_TABLE_NAME_SK2 = 'skynet_q_table_aggressive_ai_v1_0.pickle'
+REWARD_PICKLE = 'FINAL_rewards_stalemate_03.pickle'
 
 ITERATIVE_TRAINING = 0  # if you want to train Skynet on plain map for perfect attacks
 
@@ -88,6 +89,12 @@ if GAMEMODE == PVP:
     WAIT_TIME = 0
     NO_DRAW = False
     NB_PLAYER = 2
+    if SCENARIO == RUNAWAY:
+        MAP_TO_LOAD = 'scenario_runaway.txt'
+    elif SCENARIO == ATTACK:
+        MAP_TO_LOAD = 'scenario_attack.txt'
+    else:
+        MAP_TO_LOAD = 'scenario_stalemate.txt'
 
 if GAMEMODE == SKYNET_VS_P:
     WAIT_TIME = 0
